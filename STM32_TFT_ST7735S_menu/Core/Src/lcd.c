@@ -3,7 +3,6 @@
 #include "lcd.h"
 #include "spi.h"
 
-
 #define ST7735S_SLPOUT			0x11
 #define ST7735S_DISPOFF			0x28
 #define ST7735S_DISPON			0x29
