@@ -26,7 +26,6 @@
 /* USER CODE BEGIN Includes */
 
 #include "hagl.h"
-#include "font6x9.h"
 #include "rgb565.h"
 
 /* USER CODE END Includes */
@@ -104,23 +103,33 @@ int main(void)
   MX_SPI2_Init();
   /* USER CODE BEGIN 2 */
 
+  lcd_init();
+
+  hagl_clear_screen();
+
+  color_t gold = rgb565(255, 215, 0);
+  color_t red = rgb565(255, 0, 0);
+
+  /* Draw golden frame */
+  hagl_draw_rectangle(0, 0, LCD_WIDTH - 1, LCD_HEIGHT - 1, gold);
+
+  /* Draw two stacked red rectangles */
+  int rect_width = 80;
+  int rect_height = 30;
+  int x = (LCD_WIDTH - rect_width) / 2;
+  int y_top = 20;
+  hagl_fill_rectangle(x, y_top, x + rect_width - 1, y_top + rect_height - 1, red);
+  int y_bottom = y_top + rect_height + 10;
+  hagl_fill_rectangle(x, y_bottom, x + rect_width - 1, y_bottom + rect_height - 1, red);
+
+  lcd_copy();
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-
-  lcd_init();
-
   while (1)
   {
-
-
-	  for (int i = 0; i < 8; i++) {
-	    hagl_draw_rounded_rectangle(2+i, 2+i, 158-i, 126-i, 8-i, rgb565(0, 0, i*16));
-	  }
-	  hagl_put_text(L"Hello World!", 40, 55, YELLOW, font6x9);
-	  lcd_copy();
-
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */

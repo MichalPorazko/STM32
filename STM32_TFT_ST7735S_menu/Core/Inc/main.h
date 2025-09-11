@@ -41,6 +41,7 @@ extern "C" {
 
 /* Exported constants --------------------------------------------------------*/
 /* USER CODE BEGIN EC */
+extern SPI_HandleTypeDef hspi2;
 
 /* USER CODE END EC */
 
