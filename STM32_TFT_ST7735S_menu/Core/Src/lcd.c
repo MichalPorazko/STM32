@@ -121,14 +121,14 @@ static void lcd_set_window(int x, int y, int width, int height)
 void lcd_init(void)
 {
 
-  int i;
-
   HAL_GPIO_WritePin(LCD_RST_GPIO_Port, LCD_RST_Pin, GPIO_PIN_RESET);
   HAL_Delay(100);
   HAL_GPIO_WritePin(LCD_RST_GPIO_Port, LCD_RST_Pin, GPIO_PIN_SET);
   HAL_Delay(100);
 
-  for (i = 0;  sizeof(init_table) / sizeof(uint16_t); i++){
+  int i;
+
+  for (i = 0;  i < sizeof(init_table) / sizeof(init_table[0]); i++){
 	  lcd_send(init_table[i]);
   }
 
