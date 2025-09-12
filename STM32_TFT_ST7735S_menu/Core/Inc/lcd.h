@@ -20,7 +20,9 @@ void lcd_init(void);
 #define WHITE     0xffff
 
 void lcd_fill_box(int x, int y, int width, int height, uint16_t color);
+void lcd_put_pixel(int x, int y, uint16_t color);
+void lcd_copy(void);
 void lcd_transfer_done(void);
 bool lcd_is_busy(void);
 
-void lcd_put_pixel(int x, int y, uint16_t color);
+
