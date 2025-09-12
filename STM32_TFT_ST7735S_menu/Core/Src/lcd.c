@@ -128,7 +128,7 @@ void lcd_init(void)
   HAL_GPIO_WritePin(LCD_RST_GPIO_Port, LCD_RST_Pin, GPIO_PIN_SET);
   HAL_Delay(100);
 
-  for (i = 0;  sizeof(init_table) > sizeof(uint16_t); i++){
+  for (i = 0;  sizeof(init_table) / sizeof(uint16_t); i++){
 	  lcd_send(init_table[i]);
   }
 
