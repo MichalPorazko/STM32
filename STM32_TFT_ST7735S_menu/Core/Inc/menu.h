@@ -6,7 +6,7 @@
 typedef void (*MenuCallback)(void);
 
 typedef struct {
-    const wchar_t *label;
+	const wchar_t * const label;
     MenuCallback callback;
 } MenuOption;
 
@@ -17,7 +17,3 @@ typedef struct {
 } MenuPage;
 
 void menu_init(void);
-void menu_draw(void);
-void menu_next(void);
-void menu_prev(void);
-void menu_select(void);

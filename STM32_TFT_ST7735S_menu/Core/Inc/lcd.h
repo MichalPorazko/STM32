@@ -3,6 +3,7 @@
 #pragma once
 #include <stdint.h>
 #include <stdbool.h>
+#include <wchar.h>
 
 
 #define LCD_WIDTH	160
@@ -24,5 +25,6 @@ void lcd_put_pixel(int x, int y, uint16_t color);
 void lcd_copy(void);
 void lcd_transfer_done(void);
 bool lcd_is_busy(void);
+void menu_draw( uint8_t option_count, uint8_t selected, const wchar_t * const label);
 
 

@@ -1,8 +1,11 @@
 #include "menu.h"
 #include "lcd.h"
+#include "main.h"
 
 static void to_page1(void);
 static void to_page2(void);
+
+volatile uint32_t push_counter;
 
 static MenuOption page1_options[] = {
     { L"START POMIARU", to_page2 },
@@ -27,15 +30,22 @@ static MenuPage page2 = {
 
 static MenuPage *current_page = &page1;
 
-static void to_page1(void) { current_page = &page1; }
-static void to_page2(void) { current_page = &page2; }
+static void to_page1(void) {
+	current_page = &page1;
+	menu_draw(current_page->option_count, current_page->selected, current_page->options->label);
+}
+static void to_page2(void) {
+	current_page = &page2;
+	menu_draw(current_page->option_count, current_page->selected, current_page->options->label);
+}
 
 void menu_init(void)
 {
+	lcd_init();
     current_page = &page1;
     page1.selected = 0;
     page2.selected = 0;
-    menu_draw(current_page);
+    menu_draw(current_page->option_count, current_page->selected, current_page->options->label);
 }
 
 /*
@@ -68,23 +78,23 @@ void menu_init(void)
 
  */
 
-void menu_next(void)
+static void menu_next(void)
 {
     current_page->selected++;
     if (current_page->selected >= current_page->option_count) {
         current_page->selected = 0;
     }
-    menu_draw(current_page);
+    menu_draw(current_page->option_count, current_page->selected, current_page->options->label);
 }
 
-void menu_prev(void)
+static void menu_prev(void)
 {
     if (current_page->selected == 0) {
         current_page->selected = current_page->option_count - 1;
     } else {
         current_page->selected--;
     }
-    menu_draw(current_page);
+    menu_draw(current_page->option_count, current_page->selected, current_page->options->label);
 }
 
 
@@ -99,7 +109,7 @@ void menu_prev(void)
 
  */
 
-void menu_select(void)
+static void menu_select(void)
 {
     MenuOption *option = &current_page->options[current_page->selected];
     if (option->callback) {
@@ -110,6 +120,8 @@ void menu_select(void)
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
+	push_counter++;
+	HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
 	if (GPIO_Pin == BTN_UP_Pin)
 	{
 		menu_next();

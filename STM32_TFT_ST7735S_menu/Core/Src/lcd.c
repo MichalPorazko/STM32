@@ -5,7 +5,6 @@
 #include "hagl.h"
 #include "font6x9.h"
 #include "rgb565.h"
-#include "lcd.h"
 
 #define ST7735S_SLPOUT			0x11
 #define ST7735S_DISPOFF			0x28
@@ -222,7 +221,7 @@ bool lcd_is_busy(void)
 
 
 
-void menu_draw(MenuPage current_page)
+void menu_draw(uint8_t option_count, uint8_t selected, const wchar_t * const label)
 {
     color_t gold = rgb565(255, 215, 0);
     color_t red = rgb565(255, 0, 0);
@@ -238,10 +237,10 @@ void menu_draw(MenuPage current_page)
     hagl_clear_screen();
     hagl_draw_rectangle(0, 0, LCD_WIDTH - 1, LCD_HEIGHT - 1, gold);
 
-    for (uint8_t i = 0; i < current_page->option_count; i++) {
-        color_t color = (i == current_page->selected ) ? green : red;
+    for (uint8_t i = 0; i < option_count; i++) {
+        color_t color = (i == selected ) ? green : red;
         hagl_fill_rectangle(x, y, x + rect_width - 1, y + rect_height - 1, color);
-        hagl_put_text(current_page->label, x + 5, y + 10, white, font6x9);
+        hagl_put_text(label, x + 5, y + 10, white, font6x9);
         y += rect_height + spacing;
     }
 
