@@ -131,7 +131,7 @@ void lcd_init(void)
 
   int i;
 
-  for (i = 0;  i < sizeof(init_table) / sizeof(init_table[0]); i++){
+  for (i = 0;  i < (sizeof(init_table) / sizeof(init_table[0])); i++){
 	  lcd_send(init_table[i]);
   }
 

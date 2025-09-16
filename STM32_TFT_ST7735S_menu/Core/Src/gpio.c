@@ -61,7 +61,7 @@ void MX_GPIO_Init(void)
   /*Configure GPIO pins : BTN_UP_Pin BTN_DOWN_Pin BTN_ENTER_Pin */
   GPIO_InitStruct.Pin = BTN_UP_Pin|BTN_DOWN_Pin|BTN_ENTER_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
   /*Configure GPIO pin : LD2_Pin */
@@ -85,8 +85,8 @@ void MX_GPIO_Init(void)
   HAL_NVIC_SetPriority(EXTI1_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(EXTI1_IRQn);
 
-  HAL_NVIC_SetPriority(EXTI2_IRQn, 0, 0);
-  HAL_NVIC_EnableIRQ(EXTI2_IRQn);
+  HAL_NVIC_SetPriority(EXTI4_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI4_IRQn);
 
 }
 

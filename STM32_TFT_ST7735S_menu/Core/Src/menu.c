@@ -120,8 +120,6 @@ static void menu_select(void)
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
-	push_counter++;
-	HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
 	if (GPIO_Pin == BTN_UP_Pin)
 	{
 		menu_next();
