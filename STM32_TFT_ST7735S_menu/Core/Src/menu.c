@@ -4,11 +4,16 @@
 
 static void to_page1(void);
 static void to_page2(void);
+static void to_page3(void);
+static void turn_off(void);
+
+
 
 volatile uint32_t push_counter;
 
 static MenuOption page1_options[] = {
     { L"START POMIARU", to_page2 },
+	{ L"WYLACZ URZADZENIE", turn_off}
 };
 
 static MenuOption page2_options[] = {
@@ -16,9 +21,14 @@ static MenuOption page2_options[] = {
     { L"PRZERWIJ POMIAR", to_page1 },
 };
 
+static MenuOption page3_options[] = {
+	{ L"WZNOW POMIAR", to_page3 },
+	{ L"PRZERWIJ POMIAR", to_page1 },
+};
+
 static MenuPage page1 = {
 		page1_options,
-		1, // option_count
+		2, // option_count
 		0  // selected
 };
 
@@ -27,6 +37,15 @@ static MenuPage page2 = {
 		2, // option_count
 		0  // selected
 };
+
+
+static MenuPage page3 = {
+		page3_options,
+		2, // option_count
+		0  // selected
+};
+
+
 
 static MenuPage *current_page = &page1;
 
@@ -39,12 +58,25 @@ static void to_page2(void) {
 	menu_draw(current_page->option_count, current_page->selected, current_page->options->label);
 }
 
+static void to_page3(void) {
+	current_page = &page2;
+	menu_draw(current_page->option_ount, current_page->selected, current_page->options->label);
+}
+
+static void turn_off(void) {
+
+	//turn off code
+
+}
+
+
 void menu_init(void)
 {
 	lcd_init();
     current_page = &page1;
     page1.selected = 0;
     page2.selected = 0;
+    page3.selected = 0; //if this needed???
     menu_draw(current_page->option_count, current_page->selected, current_page->options->label);
 }
 
