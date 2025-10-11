@@ -1,4 +1,6 @@
 /* USER CODE BEGIN Header */
+
+#include "menu.h"
 /**
   ******************************************************************************
   * @file    gpio.c
@@ -50,20 +52,10 @@ void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(DOUT_GPIO_Port, DOUT_Pin, GPIO_PIN_RESET);
-
-  /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, LCD_RST_Pin|LCD_DC_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(LCD_CS_GPIO_Port, LCD_CS_Pin, GPIO_PIN_SET);
-
-  /*Configure GPIO pin : DOUT_Pin */
-  GPIO_InitStruct.Pin = DOUT_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(DOUT_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : BTN_UP_Pin BTN_DOWN_Pin BTN_ENTER_Pin */
   GPIO_InitStruct.Pin = BTN_UP_Pin|BTN_DOWN_Pin|BTN_ENTER_Pin;
@@ -91,5 +83,24 @@ void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 2 */
+
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+	if (GPIO_Pin == BTN_UP_Pin)
+	{
+		menu_next();
+	}
+
+	if (GPIO_Pin == BTN_DOWN_Pin)
+	{
+		menu_prev();
+	}
+
+	if (GPIO_Pin == BTN_ENTER_Pin)
+	{
+		menu_select();
+	}
+
+}
 
 /* USER CODE END 2 */

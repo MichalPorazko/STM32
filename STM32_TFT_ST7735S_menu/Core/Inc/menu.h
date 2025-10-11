@@ -17,3 +17,6 @@ typedef struct {
 } MenuPage;
 
 void menu_init(void);
+void menu_next(void);
+void menu_prev(void);
+void menu_select(void);

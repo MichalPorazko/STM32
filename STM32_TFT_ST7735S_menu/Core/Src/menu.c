@@ -1,6 +1,5 @@
 #include "menu.h"
 #include "lcd.h"
-#include "main.h"
 
 static void to_page1(void);
 static void to_page2(void);
@@ -78,7 +77,7 @@ void menu_init(void)
 
  */
 
-static void menu_next(void)
+void menu_next(void)
 {
     current_page->selected++;
     if (current_page->selected >= current_page->option_count) {
@@ -87,7 +86,7 @@ static void menu_next(void)
     menu_draw(current_page->option_count, current_page->selected, current_page->options->label);
 }
 
-static void menu_prev(void)
+void menu_prev(void)
 {
     if (current_page->selected == 0) {
         current_page->selected = current_page->option_count - 1;
@@ -109,7 +108,7 @@ static void menu_prev(void)
 
  */
 
-static void menu_select(void)
+void menu_select(void)
 {
     MenuOption *option = &current_page->options[current_page->selected];
     if (option->callback) {
@@ -117,21 +116,3 @@ static void menu_select(void)
     }
 }
 
-
-void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
-{
-	if (GPIO_Pin == BTN_UP_Pin)
-	{
-		menu_next();
-	}
-
-	if (GPIO_Pin == BTN_DOWN_Pin)
-	{
-		menu_prev();
-	}
-
-	if (GPIO_Pin == BTN_ENTER_Pin)
-	{
-		menu_select();
-	}
-}

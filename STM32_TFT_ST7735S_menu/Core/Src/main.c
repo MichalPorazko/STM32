@@ -64,14 +64,6 @@ void SystemClock_Config(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
-void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi)
-{
-	if (hspi == &hspi2)
-	{
-		lcd_transfer_done();
-	}
-}
-
 /* USER CODE END 0 */
 
 /**
@@ -107,26 +99,12 @@ int main(void)
   MX_SPI2_Init();
   MX_USART1_UART_Init();
   MX_TIM1_Init();
+  MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
 
-  hagl_clear_screen();
-  lcd_init();
+  menu_init();
 
-  color_t gold = rgb565(255, 215, 0);
-  color_t red = rgb565(255, 0, 0);
-
-  hagl_draw_rectangle(0, 0, LCD_WIDTH - 1, LCD_HEIGHT - 1, gold);
-
-  int rect_width = 80;
-  int rect_height = 30;
-  int x = (LCD_WIDTH - rect_width) / 2;
-  int y_top = 20;
-
-  hagl_fill_rectangle(x, y_top, x + rect_width - 1, y_top + rect_height - 1, red);
-  int y_bottom = y_top + rect_height + 10;
-  hagl_fill_rectangle(x, y_bottom, x + rect_width - 1, y_bottom + rect_height - 1, red);
-
-  lcd_copy();
+  HAL_TIM_OnePulse_Start(htim, OutputChannel)
 
   /* USER CODE END 2 */
 

@@ -1,25 +1,65 @@
 
-void hx711_init(hx711_t *hx711, GPIO_TypeDef *clk_gpio, uint16_t clk_pin, GPIO_TypeDef *dat_gpio, uint16_t dat_pin){
-  // Setup the pin connections with the STM Board
-  hx711->clk_gpio = clk_gpio;
-  hx711->clk_pin = clk_pin;
-  hx711->dat_gpio = dat_gpio;
-  hx711->dat_pin = dat_pin;
 
-  GPIO_InitTypeDef  gpio = {0};
-  gpio.Mode = GPIO_MODE_OUTPUT_PP;
-  gpio.Pull = GPIO_NOPULL;
-  gpio.Speed = GPIO_SPEED_FREQ_HIGH;
-  gpio.Pin = clk_pin;
-  HAL_GPIO_Init(clk_gpio, &gpio);
-  gpio.Mode = GPIO_MODE_INPUT;
-  gpio.Pull = GPIO_PULLUP;
-  gpio.Speed = GPIO_SPEED_FREQ_HIGH;
-  gpio.Pin = dat_pin;
-  HAL_GPIO_Init(dat_gpio, &gpio);
+
+#include "HX711.h"
+#include "tim.h"
+
+
+static hx711_t * volatile active_hx711 = NULL;
+
+
+static void hx711_prepare_buffer(hx711_t *hx711)
+{
+  hx711->buffer_length = htim1.Init.RepetitionCounter;
+  hx711->write_index = 0U;
+  hx711->read_index = 0U;
+  hx711->buffer_ready = 0U;
+}
+
+
+void hx711_init(hx711_t *hx711){
+
+	hx711->Aoffset = 0;
+	hx711->Ascale = 1.0f;
+	hx711->Again = 0U;
+	hx711->Boffset = 0;
+	hx711->Bscale = 1.0f;
+	hx711->Bgain = 0U;
+	hx711_prepare_buffer(hx711);
 
 }
 
+
+void hx711_timer_edge_callback(void)
+{
+  hx711_t *hx = (hx711_t *)active_hx711;
+
+  if (hx == NULL)
+  {
+    return;
+  }
+
+  uint8_t index = hx->write_index;
+  if (index < hx->buffer_length)
+  {
+    hx->bit_buffer[index] = (uint8_t)(HAL_GPIO_ReadPin(hx->dat_gpio, hx->dat_pin) ? 1U : 0U);
+    index++;
+    hx->write_index = index;
+
+    if (index >= hx->buffer_length)
+    {
+      hx->buffer_ready = 1U;
+      hx->write_index = 0U;
+      active_hx711 = NULL;
+    }
+  }
+  else
+  {
+    hx->buffer_ready = 1U;
+    hx->write_index = 0U;
+    active_hx711 = NULL;
+  }
+}
 
 
 void set_offset(hx711_t *hx711, long offset, uint8_t channel){
@@ -28,19 +68,27 @@ void set_offset(hx711_t *hx711, long offset, uint8_t channel){
 }
 
 
-uint8_t shiftIn(hx711_t *hx711) {
-    uint8_t value = 0;
-    uint8_t i;
+uint8_t shiftIn(hx711_t *hx711)
+{
+  uint8_t value = 0U;
+  for (uint8_t i = 0U; i < 8U; ++i)
+    {
+      value <<= 1U;
+      if (hx711->read_index < hx711->buffer_length)
+          {
+            value |= (hx711->bit_buffer[hx711->read_index] & 0x01U);
+          }
 
-    for(i = 0; i < 8; ++i) {
-    	HAL_GPIO_WritePin(hx711->clk_gpio, hx711->clk_pin, SET);
+          if (hx711->read_index < HX711_MAX_CAPTURE_BITS)
+          {
+            hx711->read_index++;
+          }
+        }
 
-        value |= HAL_GPIO_ReadPin(hx711->dat_gpio, hx711->dat_pin) << (7 - i);
-
-        HAL_GPIO_WritePin(hx711->clk_gpio, hx711->clk_pin, RESET);
-    }
-    return value;
+        return value;
 }
+
+
 
 long read(hx711_t *hx711, uint8_t channel){
 
