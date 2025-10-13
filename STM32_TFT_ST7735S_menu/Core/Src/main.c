@@ -104,7 +104,10 @@ int main(void)
 
   menu_init();
 
-  HAL_TIM_OnePulse_Start(htim, OutputChannel)
+  if (HAL_TIM_OnePulse_Start_IT(&htim2, TIM_CHANNEL_2) != HAL_OK)
+    {
+      Error_Handler();
+    }
 
   /* USER CODE END 2 */
 

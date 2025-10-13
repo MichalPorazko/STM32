@@ -22,6 +22,8 @@
 
 /* USER CODE BEGIN 0 */
 
+static volatile uint8_t tim2_needs_rearm = 0U;
+
 /* USER CODE END 0 */
 
 TIM_HandleTypeDef htim1;
@@ -201,6 +203,9 @@ void HAL_TIM_Base_MspInit(TIM_HandleTypeDef* tim_baseHandle)
     GPIO_InitStruct.Alternate = GPIO_AF1_TIM2;
     HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
+    /* TIM2 interrupt Init */
+    HAL_NVIC_SetPriority(TIM2_IRQn, 0, 0);
+    HAL_NVIC_EnableIRQ(TIM2_IRQn);
   /* USER CODE BEGIN TIM2_MspInit 1 */
 
   /* USER CODE END TIM2_MspInit 1 */
@@ -265,6 +270,8 @@ void HAL_TIM_Base_MspDeInit(TIM_HandleTypeDef* tim_baseHandle)
     */
     HAL_GPIO_DeInit(GPIOB, GPIO_PIN_3);
 
+    /* TIM2 interrupt Deinit */
+    HAL_NVIC_DisableIRQ(TIM2_IRQn);
   /* USER CODE BEGIN TIM2_MspDeInit 1 */
 
   /* USER CODE END TIM2_MspDeInit 1 */
@@ -275,8 +282,33 @@ void HAL_TIM_Base_MspDeInit(TIM_HandleTypeDef* tim_baseHandle)
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
+	if (htim->Instance == TIM2)
+	  {
+	    if (HAL_TIM_OnePulse_Stop_IT(&htim2, TIM_CHANNEL_2) != HAL_OK)
+	    {
+	    	//so this is the case where HAL_TIM_OnePulse_Stop_IT INTERRUPT FAILED !!
+	      if (HAL_TIM_OnePulse_Stop(&htim2, TIM_CHANNEL_2) != HAL_OK)
+	      {
+	        Error_Handler();
+	      }
+	    }
+	    tim2_needs_rearm = 1U;
+	    return;
+	  }
+
     if (htim->Instance == TIM1) {
-        uint8_t bit = HAL_GPIO_ReadPin(hx711->dat_gpio, hx711->dat_pin) ? 1 : 0;
+
+    	if (tim2_needs_rearm != 0U)
+    	    {
+    	      if (HAL_TIM_OnePulse_Start_IT(&htim2, TIM_CHANNEL_2) != HAL_OK)
+    	      {
+    	        Error_Handler();
+    	      }
+    	      tim2_needs_rearm = 0U;
+    	    }
+
+
+
     }
 }
 
