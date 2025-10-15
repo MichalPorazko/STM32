@@ -20,6 +20,7 @@
 #include "main.h"
 #include "dma.h"
 #include "spi.h"
+#include "usart.h"
 #include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
@@ -103,6 +104,8 @@ int main(void)
   MX_GPIO_Init();
   MX_DMA_Init();
   MX_SPI2_Init();
+  MX_USART3_UART_Init();
+  MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
 
   hagl_clear_screen();
@@ -123,6 +126,7 @@ int main(void)
   hagl_fill_rectangle(x, y_bottom, x + rect_width - 1, y_bottom + rect_height - 1, red);
 
   lcd_copy();
+
 
   /* USER CODE END 2 */
 

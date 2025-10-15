@@ -30,8 +30,6 @@
 #define LCD_OFFSET_X  1
 #define LCD_OFFSET_Y  2
 
-
-
 static uint16_t frame_buffer[LCD_WIDTH * LCD_HEIGHT];
 
 
@@ -68,20 +66,31 @@ static const uint16_t init_table[] = {
   to be initialized in a header file
  */
 
+static void lcd_wait_for_transfer(void)
+{
+        while (lcd_is_busy()) {
+
+        }
+}
+
 static void lcd_cmd(uint8_t cmd)
 {
 	HAL_GPIO_WritePin(LCD_DC_GPIO_Port, LCD_DC_Pin, GPIO_PIN_RESET);
 	HAL_GPIO_WritePin(LCD_CS_GPIO_Port, LCD_CS_Pin, GPIO_PIN_RESET);
-	HAL_SPI_Transmit(&hspi2, &cmd, 1, HAL_MAX_DELAY);
-	HAL_GPIO_WritePin(LCD_CS_GPIO_Port, LCD_CS_Pin, GPIO_PIN_SET);
+
+	HAL_SPI_Transmit_DMA(&hspi2, &cmd, 1);
+	lcd_wait_for_transfer();
+
 }
 
 static void lcd_data(uint8_t data)
 {
 	HAL_GPIO_WritePin(LCD_DC_GPIO_Port, LCD_DC_Pin, GPIO_PIN_SET);
 	HAL_GPIO_WritePin(LCD_CS_GPIO_Port, LCD_CS_Pin, GPIO_PIN_RESET);
-	HAL_SPI_Transmit(&hspi2, &data, 1, HAL_MAX_DELAY);
-	HAL_GPIO_WritePin(LCD_CS_GPIO_Port, LCD_CS_Pin, GPIO_PIN_SET);
+
+
+	HAL_SPI_Transmit_DMA(&hspi2, &data, 1);
+	lcd_wait_for_transfer();
 }
 
 
@@ -203,6 +212,8 @@ void lcd_copy(void)
 	HAL_GPIO_WritePin(LCD_CS_GPIO_Port, LCD_CS_Pin, GPIO_PIN_RESET);
 
 	HAL_SPI_Transmit_DMA(&hspi2, (uint8_t*)frame_buffer, sizeof(frame_buffer));
+
+
 }
 
 
