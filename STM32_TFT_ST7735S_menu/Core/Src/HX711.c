@@ -8,25 +8,13 @@
 static hx711_t * volatile active_hx711 = NULL;
 
 
-static void hx711_prepare_buffer(hx711_t *hx711)
+void hx711_init(hx711_t *hx711)
 {
+	//depending on the gain chosen here is the number of the SCLK pulses
   hx711->buffer_length = htim1.Init.RepetitionCounter;
   hx711->write_index = 0U;
   hx711->read_index = 0U;
   hx711->buffer_ready = 0U;
-}
-
-
-void hx711_init(hx711_t *hx711){
-
-	hx711->Aoffset = 0;
-	hx711->Ascale = 1.0f;
-	hx711->Again = 0U;
-	hx711->Boffset = 0;
-	hx711->Bscale = 1.0f;
-	hx711->Bgain = 0U;
-	hx711_prepare_buffer(hx711);
-
 }
 
 
@@ -55,7 +43,7 @@ void hx711_timer1_PWM_low_callback(void)
 }
 
 
-long transform_reading(hx711_t *hx711, uint8_t channel){
+static long transform_reading(hx711_t *hx711){
 
 	unsigned long value = 0;
 	uint8_t filler = 0x00;
@@ -87,46 +75,27 @@ long transform_reading(hx711_t *hx711, uint8_t channel){
 }
 
 
-long read_average(hx711_t *hx711, int8_t times, uint8_t channel) {
+static long read_average(hx711_t *hx711, int8_t times) {
 	long sum = 0;
 	for (int8_t i = 0; i < times; i++) {
-		sum += transform_reading(hx711, channel);
+		sum += transform_reading(hx711);
 	}
 	return sum / times;
 }
 
-
-void set_offset(hx711_t *hx711, long offset, uint8_t channel){
-	if(channel == CHANNEL_A) hx711->Aoffset = offset;
-	else hx711->Boffset = offset;
-}
-
-double get_value(hx711_t *hx711, int8_t times, uint8_t channel) {
-	long offset = 0;
-	if(channel == CHANNEL_A) offset = hx711->Aoffset;
-	else offset = hx711->Boffset;
-	return read_average(hx711, times, channel) - offset;
+static double get_value(hx711_t *hx711, int8_t times) {
+	return read_average(hx711, times) - hx711->offset;
 }
 
 //############################################################################################
-void tare(hx711_t *hx711, uint8_t times, uint8_t channel) {
-	transform_reading(hx711, channel); // Change channel
-	double sum = read_average(hx711, times, channel);
-	set_offset(hx711, sum, channel);
+void tare(hx711_t *hx711, uint8_t times) {
+	transform_reading(hx711);
+	hx711->offset = read_average(hx711, times);
 }
 
 //############################################################################################
-void tare_all(hx711_t *hx711, uint8_t times) {
-	tare(hx711, times, CHANNEL_A);
-	tare(hx711, times, CHANNEL_B);
-}
-
-//############################################################################################
-float get_weight(hx711_t *hx711, int8_t times, uint8_t channel) {
+float get_weight(hx711_t *hx711, int8_t times) {
   // Read load cell
-	transform_reading(hx711, channel);
-	float scale = 0;
-	if(channel == CHANNEL_A) scale = hx711->Ascale;
-	else scale = hx711->Bscale;
-	return get_value(hx711, times, channel) / scale;
+	transform_reading(hx711);
+	return get_value(hx711, times) / hx711->scale;
 }
