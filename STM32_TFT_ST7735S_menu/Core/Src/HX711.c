@@ -8,18 +8,22 @@
 static hx711_t * volatile active_hx711 = NULL;
 
 
-void hx711_init(hx711_t *hx711)
+void hx711_init(hx711_t *hx711, GPIO_TypeDef *clk_gpio, uint16_t clk_pin, GPIO_TypeDef *data_gpio, uint16_t data_pin)
 {
 	//depending on the gain chosen here is the number of the SCLK pulses
   hx711->buffer_length = htim1.Init.RepetitionCounter;
   hx711->write_index = 0U;
   hx711->read_index = 0U;
   hx711->buffer_ready = 0U;
+
+  hx711->clk_gpio = clk_gpio;
+  hx711->clk_pin = clk_pin;
+  hx711->data_gpio = data_gpio;
+  hx711->data_pin = data_pin;
 }
 
 
-void hx711_timer1_PWM_low_callback(void)
-{
+void hx711_timer1_PWM_low_callback(void){
   hx711_t *hx = (hx711_t *)active_hx711;
 
   if (hx == NULL)
@@ -30,7 +34,7 @@ void hx711_timer1_PWM_low_callback(void)
   uint8_t index = hx->write_index;
   if (index < hx->buffer_length)
   {
-    hx->bit_buffer[index] = (uint8_t)(HAL_GPIO_ReadPin(hx->dat_gpio, hx->dat_pin) ? 1U : 0U);
+    hx->bit_buffer[index] = (uint8_t)(HAL_GPIO_ReadPin(hx->data_gpio, hx->data_pin) ? 1U : 0U);
     index++;
     hx->write_index = index;
   }else

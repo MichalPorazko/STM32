@@ -1,4 +1,6 @@
 /* USER CODE BEGIN Header */
+
+#include "HX711.h"
 /**
   ******************************************************************************
   * @file    tim.c
@@ -280,10 +282,21 @@ void HAL_TIM_Base_MspDeInit(TIM_HandleTypeDef* tim_baseHandle)
 
 /* USER CODE BEGIN 1 */
 
+void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim){
+
+	if (htim->Instance == TIM1) {
+		hx711_timer1_PWM_low_callback();
+	}
+}
+
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
 	if (htim->Instance == TIM2)
 	  {
+
+		/*
+		 The question is whether the interrupt is needed, otherwise  normal mode could be used
+		 */
 	    if (HAL_TIM_OnePulse_Stop_IT(&htim2, TIM_CHANNEL_2) != HAL_OK)
 	    {
 	    	//so this is the case where HAL_TIM_OnePulse_Stop_IT INTERRUPT FAILED !!
@@ -300,15 +313,15 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 
     	if (tim2_needs_rearm != 0U)
     	    {
+    		/*
+    				 The question is whether the interrupt is needed, otherwise  normal mode could be used
+    				 */
     	      if (HAL_TIM_OnePulse_Start_IT(&htim2, TIM_CHANNEL_2) != HAL_OK)
     	      {
     	        Error_Handler();
     	      }
     	      tim2_needs_rearm = 0U;
     	    }
-
-
-
     }
 }
 
