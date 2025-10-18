@@ -4,8 +4,8 @@
 #include "HX711.h"
 #include "tim.h"
 
-static hx711_t hx711_instance;
-active_hx711 = &hx711_instance;
+volatile hx711_t *active_hx711 = NULL;
+
 
 
 void hx711_init(hx711_t *hx711, GPIO_TypeDef *data_gpio, uint16_t data_pin)

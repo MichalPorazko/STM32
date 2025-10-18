@@ -28,4 +28,4 @@ void set_offset(hx711_t *hx711, long offset);
 void tare(hx711_t *hx711, uint8_t times);
 float get_weight(hx711_t *hx711, int8_t times);
 
-volatile hx711_t* active_hx711;
+extern volatile hx711_t* active_hx711;
