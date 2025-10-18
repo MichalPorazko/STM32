@@ -27,10 +27,10 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
-#include "lcd.h"
+#include "menu.h"
 #include "hagl.h"
-#include "font6x9.h"
 #include "rgb565.h"
+#include "HX711.h"
 
 /* USER CODE END Includes */
 
@@ -75,6 +75,8 @@ int main(void)
 
   /* USER CODE BEGIN 1 */
 
+	hx711_init(active_hx711, HX_DT_GPIO_Port, HX_DT_Pin);
+
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -97,10 +99,12 @@ int main(void)
   MX_GPIO_Init();
   MX_DMA_Init();
   MX_SPI2_Init();
-  MX_USART1_UART_Init();
   MX_TIM1_Init();
   MX_TIM2_Init();
+  MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
+
+
 
   menu_init();
 
