@@ -1,4 +1,6 @@
 /* USER CODE BEGIN Header */
+#include "stdlib.h"
+#include "string.h"
 /**
   ******************************************************************************
   * @file    usart.h

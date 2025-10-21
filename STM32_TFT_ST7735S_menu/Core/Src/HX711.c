@@ -88,9 +88,50 @@ void tare(hx711_t *hx711, uint8_t times) {
 	hx711->offset = read_average(hx711, times);
 }
 
+
+
 //############################################################################################
-float get_weight(hx711_t *hx711, int8_t times) {
+float get_weight(hx711_t *hx711) {
   // Read load cell
 	transform_reading(hx711);
-	return get_value(hx711, times) / hx711->scale;
+	return transform_reading(hx711) / hx711->scale;
+}
+
+
+
+
+
+uint8_t* pack_data(hx711_t *hx711, float float_val, const char* char_array, uint8_t bit_values) {
+
+	//uint16_t total_size = sizeof(float) + strlen(char_array) + 1 + sizeof(bit_values);
+	//if the '/0' will be included
+
+    uint16_t total_size = sizeof(float) + strlen(char_array) + sizeof(bit_values);
+    uint8_t* packed_data = (uint8_t*)malloc(total_size);
+    //hx711->data_to_send = (uint8_t*)malloc(total_size);
+
+//    if (packed_data == NULL) {
+//        *size = 0;
+//        return NULL;
+//    }
+
+    // to keep track of the current position in the array
+    uint16_t offset = 0;
+
+    memcpy(packed_data + offset, float_val, sizeof(float));
+    offset += sizeof(float);
+
+    /*
+        using the strcpy will copy '\0' character into the array
+    */
+    memcpy(packed_data + offset, char_array, strlen(char_array));
+    offset += strlen(char_array) + 1;
+
+    // Pack the bit values into the array
+    memcpy(packed_data + offset, &bit_values, sizeof(bit_values));
+    offset += sizeof(bit_values);
+
+//    *size = offset;
+
+    return packed_data;
 }

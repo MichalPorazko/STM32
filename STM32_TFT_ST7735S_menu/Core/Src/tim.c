@@ -322,7 +322,9 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 
     if (htim->Instance == TIM1) {
 
+    	static uint8_t *data = &pack_data(get_weight(active_hx711), "NORMAL", 1);
 
+    	HAL_UART_Transmit_DMA(&huart1, &data, sizeof(data));
 
     }
 }

@@ -17,6 +17,7 @@ typedef struct
   volatile uint8_t buffer_ready;
   uint8_t       buffer_length;
   uint8_t       read_index;
+  uint8_t 		data_to_send;
   GPIO_TypeDef  *data_gpio;
   uint16_t      data_pin;
 } hx711_t;
@@ -26,6 +27,8 @@ void hx711_init(hx711_t* hx711, GPIO_TypeDef* data_gpio, uint16_t data_pin);
 void hx711_timer1_PWM_low_callback(hx711_t* hx711);
 void set_offset(hx711_t *hx711, long offset);
 void tare(hx711_t *hx711, uint8_t times);
-float get_weight(hx711_t *hx711, int8_t times);
+float get_weight(hx711_t *hx711);
+
+uint8_t* pack_data(hx711_t* hx711, float float_val, const char* char_array, uint8_t bit_values);
 
 extern volatile hx711_t* active_hx711;
