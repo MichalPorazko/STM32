@@ -2,39 +2,69 @@
 
 
 #include "HX711.h"
-#include "tim.h"
+#include <stddef.h>
+#include <stdint.h>
+#include <string.h>
 
 volatile hx711_t *active_hx711 = NULL;
 
+static long transform_reading(hx711_t *hx711);
 
 
 void hx711_init(hx711_t *hx711, GPIO_TypeDef *data_gpio, uint16_t data_pin)
 {
-	//depending on the gain chosen here is the number of the SCLK pulses
-  hx711->buffer_length = htim1.Init.RepetitionCounter;
+
+  memset(hx711, 0, sizeof(&hx711));
+
+  //depending on the gain chosen here is the number of the SCLK pulses
+  hx711->buffer_length = htim1.Init.RepetitionCounter + 1U;
   hx711->write_index = 0U;
-  hx711->read_index = 0U;
-  hx711->buffer_ready = 0U;
 
   hx711->data_gpio = data_gpio;
   hx711->data_pin = data_pin;
+  hx711->scale = 1;
+  hx711->critical = 0U;
+  hx711->new_patient = 1U;
+
+  active_hx711 = hx711;
 }
 
+void start_measurement(void){
+	if (HAL_TIM_OnePulse_Start(&htim2, TIM_CHANNEL_2) != HAL_OK)
+	    {
+	      Error_Handler();
+	    }
+
+	  if (HAL_TIM_Base_Start(&htim1) != HAL_OK)
+	      {
+	        Error_Handler();
+	      }
+}
 
 void hx711_timer1_PWM_low_callback(hx711_t *hx711){
 
   uint8_t index = hx711->write_index;
   if (index < hx711->buffer_length)
   {
-	  hx711->bit_buffer[index] = (uint8_t)(HAL_GPIO_ReadPin(hx711->data_gpio, hx711->data_pin) ? 1U : 0U);
+	  hx711->bit_buffer[index] = (HAL_GPIO_ReadPin(hx711->data_gpio, hx711->data_pin) ? 1U : 0U);
     index++;
     hx711->write_index = index;
-  }else
+  }
+  else
   {
-	  hx711->buffer_ready = 1U;
 	  hx711->write_index = 0U;
   }
 
+}
+
+void hx711_update_reading(hx711_t *hx711)
+{
+  long raw_value = transform_reading(hx711);
+  hx711->raw_reading = raw_value;
+
+
+  double adjusted = (double)raw_value - (double)hx711->offset;
+  hx711->processed_reading = (float)((hx711->processed_reading + (adjusted / (double)hx711->scale))/hx711->measurement_count);
 }
 
 
@@ -70,68 +100,26 @@ static long transform_reading(hx711_t *hx711){
 }
 
 
-static long read_average(hx711_t *hx711, int8_t times) {
-	long sum = 0;
-	for (int8_t i = 0; i < times; i++) {
-		sum += transform_reading(hx711);
-	}
-	return sum / times;
-}
-
-static double get_value(hx711_t *hx711, int8_t times) {
-	return read_average(hx711, times) - hx711->offset;
-}
-
-//############################################################################################
-void tare(hx711_t *hx711, uint8_t times) {
-	transform_reading(hx711);
-	hx711->offset = read_average(hx711, times);
-}
 
 
 
-//############################################################################################
-float get_weight(hx711_t *hx711) {
-  // Read load cell
-	transform_reading(hx711);
-	return transform_reading(hx711) / hx711->scale;
-}
-
-
-
-
-
-uint8_t* pack_data(hx711_t *hx711, float float_val, const char* char_array, uint8_t bit_values) {
-
-	//uint16_t total_size = sizeof(float) + strlen(char_array) + 1 + sizeof(bit_values);
-	//if the '/0' will be included
-
-    uint16_t total_size = sizeof(float) + strlen(char_array) + sizeof(bit_values);
-    uint8_t* packed_data = (uint8_t*)malloc(total_size);
-    //hx711->data_to_send = (uint8_t*)malloc(total_size);
-
-//    if (packed_data == NULL) {
-//        *size = 0;
-//        return NULL;
-//    }
+void pack_data(hx711_t *hx711) {
 
     // to keep track of the current position in the array
-    uint16_t offset = 0;
+    size_t offset = 0U;
 
-    memcpy(packed_data + offset, float_val, sizeof(float));
+    float processed_reading = hx711->processed_reading;
+    memcpy(hx711->tx_buffer + offset, &processed_reading, sizeof(float));
     offset += sizeof(float);
 
-    /*
-        using the strcpy will copy '\0' character into the array
-    */
-    memcpy(packed_data + offset, char_array, strlen(char_array));
-    offset += strlen(char_array) + 1;
+    uint8_t critical = hx711->critical;
 
-    // Pack the bit values into the array
-    memcpy(packed_data + offset, &bit_values, sizeof(bit_values));
-    offset += sizeof(bit_values);
+    memcpy(hx711->tx_buffer + offset, &critical, sizeof(uint8_t));
+    offset += sizeof(uint8_t);
 
-//    *size = offset;
+    uint8_t new_patient = hx711->new_patient;
+    memcpy(hx711->tx_buffer + offset, &new_patient, sizeof(uint8_t));
+    offset += sizeof(uint8_t);
 
-    return packed_data;
+
 }

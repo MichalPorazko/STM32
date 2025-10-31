@@ -57,25 +57,26 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
+#define BTN_POWER_Pin GPIO_PIN_1
+#define BTN_POWER_GPIO_Port GPIOC
+#define BTN_POWER_EXTI_IRQn EXTI1_IRQn
 #define BTN_UP_Pin GPIO_PIN_0
 #define BTN_UP_GPIO_Port GPIOA
 #define BTN_UP_EXTI_IRQn EXTI0_IRQn
 #define BTN_DOWN_Pin GPIO_PIN_1
 #define BTN_DOWN_GPIO_Port GPIOA
-#define BTN_DOWN_EXTI_IRQn EXTI1_IRQn
 #define BTN_ENTER_Pin GPIO_PIN_4
 #define BTN_ENTER_GPIO_Port GPIOA
-#define BTN_ENTER_EXTI_IRQn EXTI4_IRQn
-#define LCD_RST_Pin GPIO_PIN_2
-#define LCD_RST_GPIO_Port GPIOB
-#define LCD_DC_Pin GPIO_PIN_11
-#define LCD_DC_GPIO_Port GPIOB
-#define LCD_CS_Pin GPIO_PIN_12
-#define LCD_CS_GPIO_Port GPIOB
+#define LCD_RST_Pin GPIO_PIN_7
+#define LCD_RST_GPIO_Port GPIOC
 #define HX_SCK_Pin GPIO_PIN_8
 #define HX_SCK_GPIO_Port GPIOA
 #define HX_DT_Pin GPIO_PIN_3
 #define HX_DT_GPIO_Port GPIOB
+#define LCD_CS_Pin GPIO_PIN_4
+#define LCD_CS_GPIO_Port GPIOB
+#define LCD_DC_Pin GPIO_PIN_5
+#define LCD_DC_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
 

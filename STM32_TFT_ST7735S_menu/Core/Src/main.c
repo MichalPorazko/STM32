@@ -75,7 +75,7 @@ int main(void)
 
   /* USER CODE BEGIN 1 */
 
-	hx711_init(active_hx711, HX_DT_GPIO_Port, HX_DT_Pin);
+
 
   /* USER CODE END 1 */
 
@@ -106,22 +106,17 @@ int main(void)
 
 
 
+  hx711_init(active_hx711, HX_DT_GPIO_Port, HX_DT_Pin);
   menu_init();
 
-  if (HAL_TIM_OnePulse_Start(&htim2, TIM_CHANNEL_2) != HAL_OK)
-    {
-      Error_Handler();
-    }
 
-  if (HAL_TIM_Base_Start(&htim1) != HAL_OK)
-      {
-        Error_Handler();
-      }
 
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+
+  start_measurement();
 
   while (1)
   {

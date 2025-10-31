@@ -1,6 +1,5 @@
 #include "menu.h"
-#include "lcd.h"
-#include "main.h"
+
 
 static void to_page1(void);
 static void to_page2(void);
@@ -59,6 +58,7 @@ static void to_page1(void) {
 static void to_page2(void) {
 	current_page = &page2;
 	menu_draw(current_page->option_count, current_page->selected, current_page->options->label);
+	start_measurement();
 }
 
 static void to_page3(void) {
@@ -168,5 +168,9 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 	if (GPIO_Pin == BTN_ENTER_Pin)
 	{
 		menu_select();
+	}
+
+	if (GPIO_Pin == BTN_POWER_Pin){
+		//power down
 	}
 }

@@ -2,6 +2,9 @@
 
 #include <stdint.h>
 #include <wchar.h>
+#include "lcd.h"
+#include "main.h"
+#include "HX711.h"
 
 typedef void (*MenuCallback)(void);
 

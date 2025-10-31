@@ -57,6 +57,8 @@ static const uint16_t init_table[] = {
   CMD(ST7735S_MADCTL), 0xa0,
 };
 
+uint8_t done = 0;
+
 
 /*
  Declaring a function as static which results that this function
@@ -212,7 +214,7 @@ void lcd_copy(void)
 	HAL_GPIO_WritePin(LCD_CS_GPIO_Port, LCD_CS_Pin, GPIO_PIN_RESET);
 
 	HAL_SPI_Transmit_DMA(&hspi2, (uint8_t*)frame_buffer, sizeof(frame_buffer));
-
+	lcd_wait_for_transfer();
 
 }
 
@@ -220,14 +222,23 @@ void lcd_copy(void)
 void lcd_transfer_done(void)
 {
 	HAL_GPIO_WritePin(LCD_CS_GPIO_Port, LCD_CS_Pin, GPIO_PIN_SET);
+	done = 1;
 }
 
 bool lcd_is_busy(void)
 {
-	if (HAL_SPI_GetState(&hspi2) == HAL_SPI_STATE_BUSY)
+	if (__HAL_SPI_GET_FLAG(&hspi2, SPI_FLAG_BSY))
 		return true;
 	else
 		return false;
+}
+
+void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi)
+{
+	if (hspi == &hspi2)
+	{
+		lcd_transfer_done();
+	}
 }
 
 

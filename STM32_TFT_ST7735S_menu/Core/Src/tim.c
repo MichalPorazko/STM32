@@ -1,6 +1,7 @@
 /* USER CODE BEGIN Header */
 
 #include "HX711.h"
+#include "usart.h"
 /**
   ******************************************************************************
   * @file    tim.c
@@ -285,14 +286,14 @@ void HAL_TIM_Base_MspDeInit(TIM_HandleTypeDef* tim_baseHandle)
 void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim){
 
 	if (htim->Instance == TIM1) {
-		hx711_timer1_PWM_low_callback(active_hx711);
+		hx711_timer1_PWM_low_callback(&active_hx711);
 		if (tim2_needs_rearm != 0U)
 		    	    {
 		    		/*
 		    				 The question is whether the interrupt is needed, otherwise  normal mode could be used
 		    				 */
-		    	      if (HAL_TIM_OnePulse_Start_IT(&htim2, TIM_CHANNEL_2) != HAL_OK)
-		    	      {
+		if (HAL_TIM_OnePulse_Start_IT(&htim2, TIM_CHANNEL_2) != HAL_OK)
+		 	      {
 		    	        Error_Handler();
 		    	      }
 		    	      tim2_needs_rearm = 0U;
@@ -322,9 +323,22 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 
     if (htim->Instance == TIM1) {
 
-    	static uint8_t *data = &pack_data(get_weight(active_hx711), "NORMAL", 1);
+    	if (active_hx711->measurement_count <= measurement_threshold){
+    		hx711_update_reading(&active_hx711);
+    		active_hx711->measurement_count = (uint8_t)(active_hx711->measurement_count + 1U);
+    	}
 
-    	HAL_UART_Transmit_DMA(&huart1, &data, sizeof(data));
+    	if (active_hx711->tx_in_progress == 0U){
+
+    		pack_data(&active_hx711);
+
+    		if (HAL_UART_Transmit_DMA(&huart1, &(active_hx711->tx_buffer), HX711_TX_BUFFER_SIZE) == HAL_OK){
+    			active_hx711->tx_in_progress == 1U;
+    			active_hx711->measurement_count = 0U;
+    		}
+    	}
+
+
 
     }
 }
