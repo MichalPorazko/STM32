@@ -31,6 +31,8 @@
 #include "hagl.h"
 #include "rgb565.h"
 #include "HX711.h"
+#include "font5x8.h"
+#include "lcd.h"
 
 /* USER CODE END Includes */
 
@@ -63,6 +65,7 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+
 
 /* USER CODE END 0 */
 
@@ -102,6 +105,7 @@ int main(void)
   MX_TIM1_Init();
   MX_TIM2_Init();
   MX_USART1_UART_Init();
+  MX_TIM6_Init();
   /* USER CODE BEGIN 2 */
 
 
@@ -111,12 +115,12 @@ int main(void)
 
 
 
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 
-  start_measurement();
 
   while (1)
   {

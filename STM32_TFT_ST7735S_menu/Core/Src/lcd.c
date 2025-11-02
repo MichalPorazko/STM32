@@ -30,8 +30,6 @@
 #define LCD_OFFSET_X  1
 #define LCD_OFFSET_Y  2
 
-static uint16_t frame_buffer[LCD_WIDTH * LCD_HEIGHT];
-
 
 #define CMD(x)			((x) | 0x100)
 
@@ -57,8 +55,6 @@ static const uint16_t init_table[] = {
   CMD(ST7735S_MADCTL), 0xa0,
 };
 
-uint8_t done = 0;
-
 
 /*
  Declaring a function as static which results that this function
@@ -79,20 +75,16 @@ static void lcd_cmd(uint8_t cmd)
 {
 	HAL_GPIO_WritePin(LCD_DC_GPIO_Port, LCD_DC_Pin, GPIO_PIN_RESET);
 	HAL_GPIO_WritePin(LCD_CS_GPIO_Port, LCD_CS_Pin, GPIO_PIN_RESET);
-
-	HAL_SPI_Transmit_DMA(&hspi2, &cmd, 1);
-	lcd_wait_for_transfer();
-
+	HAL_SPI_Transmit(&hspi2, &cmd, 1, HAL_MAX_DELAY);
+	HAL_GPIO_WritePin(LCD_CS_GPIO_Port, LCD_CS_Pin, GPIO_PIN_SET);
 }
 
 static void lcd_data(uint8_t data)
 {
 	HAL_GPIO_WritePin(LCD_DC_GPIO_Port, LCD_DC_Pin, GPIO_PIN_SET);
 	HAL_GPIO_WritePin(LCD_CS_GPIO_Port, LCD_CS_Pin, GPIO_PIN_RESET);
-
-
-	HAL_SPI_Transmit_DMA(&hspi2, &data, 1);
-	lcd_wait_for_transfer();
+	HAL_SPI_Transmit(&hspi2, &data, 1, HAL_MAX_DELAY);
+	HAL_GPIO_WritePin(LCD_CS_GPIO_Port, LCD_CS_Pin, GPIO_PIN_SET);
 }
 
 
@@ -116,12 +108,6 @@ static void lcd_data16(uint16_t value)
 
 static void lcd_set_window(int x, int y, int width, int height)
 {
-	/*
-	 if x is 10 and width is 5, the ending column should be 14 (10 + 5 - 1).
-	 This is because the width includes the starting pixel itself. If we didn't subtract 1,
-	 the ending column would be 15, which would include an extra pixel.
-	 */
-
 	lcd_cmd(ST7735S_CASET);
 	lcd_data16(LCD_OFFSET_X + x);
 	lcd_data16(LCD_OFFSET_X + x + width - 1);
@@ -166,39 +152,6 @@ void lcd_fill_box(int x, int y, int width, int height, uint16_t color)
 }
 
 
-/*
- In a 2D grid (like a display screen), we have rows and columns.
- To represent this 2D grid in a 1D array (like our frame buffer),
-  we need a way to map the 2D coordinates (x, y) to a 1D index.
-
-  Verifying with an Example:
-	Let's say we have a smaller display for simplicity: width = 4, height = 3.
-
-	Frame buffer indices would look like this (row-major order):
-
-	LCD_WIDTH = 4
-	LCD_HEIGHT = 3
-
-	Ekran:
-	+----+----+----+----+
-	|  0 |  1 |  2 |  3 |  ← y = 0
-	+----+----+----+----+
-	|  4 |  5 |  6 |  7 |  ← y = 1
-	+----+----+----+----+
-	|  8 |  9 | 10 | 11 |  ← y = 2
-	+----+----+----+----+
-
-
-	For a pixel at (x, y) = (2, 1): (assuming y=0 is the top row)
-
-	y = 1 → starting index of row 1 is 1 * 4 = 4
-	x = 2 → index = 4 + 2 = 6
-	Which matches the position in the 2D grid.
-
-
-
- */
-
 
 void lcd_put_pixel(int x, int y, uint16_t color)
 {
@@ -222,12 +175,11 @@ void lcd_copy(void)
 void lcd_transfer_done(void)
 {
 	HAL_GPIO_WritePin(LCD_CS_GPIO_Port, LCD_CS_Pin, GPIO_PIN_SET);
-	done = 1;
 }
 
 bool lcd_is_busy(void)
 {
-	if (__HAL_SPI_GET_FLAG(&hspi2, SPI_FLAG_BSY))
+	if (HAL_SPI_GetState(&hspi2) == HAL_SPI_STATE_BUSY)
 		return true;
 	else
 		return false;
@@ -241,9 +193,7 @@ void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi)
 	}
 }
 
-
-
-void menu_draw(uint8_t option_count, uint8_t selected, const wchar_t * const label)
+void menu_draw(uint8_t option_count, uint8_t selected, struct MenuOption *options)
 {
     color_t gold = rgb565(255, 215, 0);
     color_t red = rgb565(255, 0, 0);
@@ -262,9 +212,12 @@ void menu_draw(uint8_t option_count, uint8_t selected, const wchar_t * const lab
     for (uint8_t i = 0; i < option_count; i++) {
         color_t color = (i == selected ) ? green : red;
         hagl_fill_rectangle(x, y, x + rect_width - 1, y + rect_height - 1, color);
-        hagl_put_text(label, x + 5, y + 10, white, font6x9);
+        hagl_put_text(options[i].label, x + 5, y + 10, white, font6x9);
         y += rect_height + spacing;
     }
 
     lcd_copy();
 }
+
+
+

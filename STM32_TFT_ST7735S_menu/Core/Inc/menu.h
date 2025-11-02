@@ -6,12 +6,15 @@
 #include "main.h"
 #include "HX711.h"
 
+volatile uint16_t pin_debounce;
+
 typedef void (*MenuCallback)(void);
 
-typedef struct {
-	const wchar_t * const label;
+typedef struct MenuOption {
+        const wchar_t * const label;
     MenuCallback callback;
 } MenuOption;
+
 
 typedef struct {
     MenuOption *options;
@@ -20,3 +23,8 @@ typedef struct {
 } MenuPage;
 
 void menu_init(void);
+void turn_off(void);
+void menu_next(void);
+void menu_prev(void);
+void menu_select(void);
+

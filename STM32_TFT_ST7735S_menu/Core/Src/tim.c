@@ -1,7 +1,4 @@
 /* USER CODE BEGIN Header */
-
-#include "HX711.h"
-#include "usart.h"
 /**
   ******************************************************************************
   * @file    tim.c
@@ -25,12 +22,13 @@
 
 /* USER CODE BEGIN 0 */
 
-static volatile uint8_t tim2_needs_rearm = 0U;
+
 
 /* USER CODE END 0 */
 
 TIM_HandleTypeDef htim1;
 TIM_HandleTypeDef htim2;
+TIM_HandleTypeDef htim6;
 
 /* TIM1 init function */
 void MX_TIM1_Init(void)
@@ -165,6 +163,39 @@ void MX_TIM2_Init(void)
   /* USER CODE END TIM2_Init 2 */
 
 }
+/* TIM6 init function */
+void MX_TIM6_Init(void)
+{
+
+  /* USER CODE BEGIN TIM6_Init 0 */
+
+  /* USER CODE END TIM6_Init 0 */
+
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+
+  /* USER CODE BEGIN TIM6_Init 1 */
+
+  /* USER CODE END TIM6_Init 1 */
+  htim6.Instance = TIM6;
+  htim6.Init.Prescaler = 80-1;
+  htim6.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim6.Init.Period = DEBOUNCE_COUNT-1;
+  htim6.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim6) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim6, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM6_Init 2 */
+
+  /* USER CODE END TIM6_Init 2 */
+
+}
 
 void HAL_TIM_Base_MspInit(TIM_HandleTypeDef* tim_baseHandle)
 {
@@ -212,6 +243,21 @@ void HAL_TIM_Base_MspInit(TIM_HandleTypeDef* tim_baseHandle)
   /* USER CODE BEGIN TIM2_MspInit 1 */
 
   /* USER CODE END TIM2_MspInit 1 */
+  }
+  else if(tim_baseHandle->Instance==TIM6)
+  {
+  /* USER CODE BEGIN TIM6_MspInit 0 */
+
+  /* USER CODE END TIM6_MspInit 0 */
+    /* TIM6 clock enable */
+    __HAL_RCC_TIM6_CLK_ENABLE();
+
+    /* TIM6 interrupt Init */
+    HAL_NVIC_SetPriority(TIM6_DAC_IRQn, 0, 0);
+    HAL_NVIC_EnableIRQ(TIM6_DAC_IRQn);
+  /* USER CODE BEGIN TIM6_MspInit 1 */
+
+  /* USER CODE END TIM6_MspInit 1 */
   }
 }
 void HAL_TIM_MspPostInit(TIM_HandleTypeDef* timHandle)
@@ -279,68 +325,22 @@ void HAL_TIM_Base_MspDeInit(TIM_HandleTypeDef* tim_baseHandle)
 
   /* USER CODE END TIM2_MspDeInit 1 */
   }
+  else if(tim_baseHandle->Instance==TIM6)
+  {
+  /* USER CODE BEGIN TIM6_MspDeInit 0 */
+
+  /* USER CODE END TIM6_MspDeInit 0 */
+    /* Peripheral clock disable */
+    __HAL_RCC_TIM6_CLK_DISABLE();
+
+    /* TIM6 interrupt Deinit */
+    HAL_NVIC_DisableIRQ(TIM6_DAC_IRQn);
+  /* USER CODE BEGIN TIM6_MspDeInit 1 */
+
+  /* USER CODE END TIM6_MspDeInit 1 */
+  }
 }
 
 /* USER CODE BEGIN 1 */
-
-void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim){
-
-	if (htim->Instance == TIM1) {
-		hx711_timer1_PWM_low_callback(&active_hx711);
-		if (tim2_needs_rearm != 0U)
-		    	    {
-		    		/*
-		    				 The question is whether the interrupt is needed, otherwise  normal mode could be used
-		    				 */
-		if (HAL_TIM_OnePulse_Start_IT(&htim2, TIM_CHANNEL_2) != HAL_OK)
-		 	      {
-		    	        Error_Handler();
-		    	      }
-		    	      tim2_needs_rearm = 0U;
-		    	    }
-	}
-}
-
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
-{
-	if (htim->Instance == TIM2)
-	  {
-
-		/*
-		 The question is whether the interrupt is needed, otherwise  normal mode could be used
-		 */
-	    if (HAL_TIM_OnePulse_Stop_IT(&htim2, TIM_CHANNEL_2) != HAL_OK)
-	    {
-	    	//so this is the case where HAL_TIM_OnePulse_Stop_IT INTERRUPT FAILED !!
-	      if (HAL_TIM_OnePulse_Stop(&htim2, TIM_CHANNEL_2) != HAL_OK)
-	      {
-	        Error_Handler();
-	      }
-	    }
-	    tim2_needs_rearm = 1U;
-	    return;
-	  }
-
-    if (htim->Instance == TIM1) {
-
-    	if (active_hx711->measurement_count <= measurement_threshold){
-    		hx711_update_reading(&active_hx711);
-    		active_hx711->measurement_count = (uint8_t)(active_hx711->measurement_count + 1U);
-    	}
-
-    	if (active_hx711->tx_in_progress == 0U){
-
-    		pack_data(&active_hx711);
-
-    		if (HAL_UART_Transmit_DMA(&huart1, &(active_hx711->tx_buffer), HX711_TX_BUFFER_SIZE) == HAL_OK){
-    			active_hx711->tx_in_progress == 1U;
-    			active_hx711->measurement_count = 0U;
-    		}
-    	}
-
-
-
-    }
-}
 
 /* USER CODE END 1 */

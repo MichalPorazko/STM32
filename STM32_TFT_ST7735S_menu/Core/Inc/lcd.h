@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <wchar.h>
+#include "menu.h"
 
 
 #define LCD_WIDTH	160
@@ -20,11 +21,13 @@ void lcd_init(void);
 #define CYAN      0x07ff
 #define WHITE     0xffff
 
+uint16_t frame_buffer[LCD_WIDTH * LCD_HEIGHT];
+
 void lcd_fill_box(int x, int y, int width, int height, uint16_t color);
 void lcd_put_pixel(int x, int y, uint16_t color);
 void lcd_copy(void);
 void lcd_transfer_done(void);
 bool lcd_is_busy(void);
-void menu_draw( uint8_t option_count, uint8_t selected, const wchar_t * const label);
+void menu_draw(uint8_t option_count, uint8_t selected, struct MenuOption *options);
 
 

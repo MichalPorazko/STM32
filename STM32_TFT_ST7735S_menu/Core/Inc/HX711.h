@@ -3,6 +3,7 @@
 
 #include "main.h"
 #include "tim.h"
+#include "usart.h"
 
 #include <stdint.h>
 
@@ -40,11 +41,11 @@ typedef struct
 
 } hx711_t;
 
-void hx711_init(hx711_t* hx711, GPIO_TypeDef* data_gpio, uint16_t data_pin);
+void hx711_init(volatile hx711_t* hx711, GPIO_TypeDef* data_gpio, uint16_t data_pin);
 void start_measurement(void);
-void hx711_timer1_PWM_low_callback(hx711_t* hx711);
-void hx711_update_reading(hx711_t *hx711);
+void hx711_timer1_PWM_low_callback(volatile hx711_t* hx711);
+void hx711_update_reading(volatile hx711_t *hx711);
 
-void pack_data(hx711_t* hx711);
+void pack_data(volatile hx711_t* hx711);
 
 extern volatile hx711_t* active_hx711;
