@@ -33,7 +33,12 @@ void hx711_init(volatile hx711_t *hx711, GPIO_TypeDef *data_gpio, uint16_t data_
 }
 
 void start_measurement(void){
-	if (HAL_TIM_OnePulse_Start(&htim2, TIM_CHANNEL_2) != HAL_OK)
+	/*
+	 __HAL_TIM_ENABLE(&htim2);
+	 then I receive #
+	 */
+
+	/*if (HAL_TIM_OnePulse_Start(&htim2, TIM_CHANNEL_2) != HAL_OK)
 	    {
 	      Error_Handler();
 	    }
@@ -42,6 +47,10 @@ void start_measurement(void){
 	      {
 	        Error_Handler();
 	      }
+
+	      then I receive 3
+
+	      */
 }
 
 void hx711_timer1_PWM_low_callback(volatile hx711_t *hx711){
@@ -132,16 +141,9 @@ void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim){
 	if (htim->Instance == TIM1) {
 		hx711_timer1_PWM_low_callback(active_hx711);
 		if (tim2_needs_rearm != 0U)
-		    	    {
-		    		/*
-		    				 The question is whether the interrupt is needed, otherwise  normal mode could be used
-		    				 */
-		if (HAL_TIM_OnePulse_Start_IT(&htim2, TIM_CHANNEL_2) != HAL_OK)
-		 	      {
-		    	        Error_Handler();
-		    	      }
-		    	      tim2_needs_rearm = 0U;
-		    	    }
+		{
+		  __HAL_TIM_ENABLE(&htim2);
+		}
 	}
 }
 
@@ -153,14 +155,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 		/*
 		 The question is whether the interrupt is needed, otherwise  normal mode could be used
 		 */
-	    if (HAL_TIM_OnePulse_Stop_IT(&htim2, TIM_CHANNEL_2) != HAL_OK)
-	    {
-	    	//so this is the case where HAL_TIM_OnePulse_Stop_IT INTERRUPT FAILED !!
-	      if (HAL_TIM_OnePulse_Stop(&htim2, TIM_CHANNEL_2) != HAL_OK)
-	      {
-	        Error_Handler();
-	      }
-	    }
+	    __HAL_TIM_DISABLE(&htim6);
 	    tim2_needs_rearm = 1U;
 	    return;
 	  }

@@ -105,7 +105,9 @@ void MX_TIM1_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN TIM1_Init 2 */
-
+  __HAL_TIM_CLEAR_IT(&htim1, TIM_IT_UPDATE);
+    // enable timer update interrupt
+    __HAL_TIM_ENABLE_IT(&htim1,TIM_IT_UPDATE);
   /* USER CODE END TIM1_Init 2 */
   HAL_TIM_MspPostInit(&htim1);
 
@@ -159,6 +161,9 @@ void MX_TIM2_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN TIM2_Init 2 */
+  __HAL_TIM_CLEAR_IT(&htim2, TIM_IT_UPDATE);
+    // enable timer update interrupt
+    __HAL_TIM_ENABLE_IT(&htim2,TIM_IT_UPDATE);
 
   /* USER CODE END TIM2_Init 2 */
 
