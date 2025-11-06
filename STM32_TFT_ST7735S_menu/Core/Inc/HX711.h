@@ -18,8 +18,6 @@ typedef struct
   long       	offset;
   float         scale;
   uint8_t       bit_buffer[HX711_BUFFER_SIZE];
-
-  //does it needs to be volatile???
   volatile uint8_t write_index;
 
   uint8_t       buffer_length;

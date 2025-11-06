@@ -33,24 +33,19 @@ void hx711_init(volatile hx711_t *hx711, GPIO_TypeDef *data_gpio, uint16_t data_
 }
 
 void start_measurement(void){
-	/*
+
 	 __HAL_TIM_ENABLE(&htim2);
-	 then I receive #
-	 */
+	 //then I receive #
 
-	/*if (HAL_TIM_OnePulse_Start(&htim2, TIM_CHANNEL_2) != HAL_OK)
-	    {
-	      Error_Handler();
-	    }
 
-	  if (HAL_TIM_Base_Start(&htim1) != HAL_OK)
-	      {
-	        Error_Handler();
-	      }
+//	if (HAL_TIM_OnePulse_Start_IT(&htim2, TIM_CHANNEL_2) != HAL_OK)
+//	    {
+//	      Error_Handler();
+//	    }
 
-	      then I receive 3
+	      //then I receive 3
 
-	      */
+
 }
 
 void hx711_timer1_PWM_low_callback(volatile hx711_t *hx711){
@@ -142,7 +137,8 @@ void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim){
 		hx711_timer1_PWM_low_callback(active_hx711);
 		if (tim2_needs_rearm != 0U)
 		{
-		  __HAL_TIM_ENABLE(&htim2);
+			if (HAL_TIM_OnePulse_Start_IT(&htim2, TIM_CHANNEL_2) != HAL_OK)  // keep _IT
+			                Error_Handler();
 		}
 	}
 }
@@ -155,7 +151,12 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 		/*
 		 The question is whether the interrupt is needed, otherwise  normal mode could be used
 		 */
-	    __HAL_TIM_DISABLE(&htim6);
+
+		if (HAL_TIM_OnePulse_Stop_IT(&htim2, TIM_CHANNEL_2) != HAL_OK)
+		{
+		        Error_Handler();
+		}
+
 	    tim2_needs_rearm = 1U;
 	    return;
 	  }
@@ -166,17 +167,18 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
     		hx711_update_reading(active_hx711);
     		active_hx711->measurement_count = (uint8_t)(active_hx711->measurement_count + 1U);
     	}
+    	else {
 
-    	if (active_hx711->tx_in_progress == 0U){
+			if (active_hx711->tx_in_progress == 0U){
 
-    		pack_data(active_hx711);
+				pack_data(active_hx711);
 
-    		if (HAL_UART_Transmit_IT(&huart1, (uint8_t *)( active_hx711->tx_buffer), HX711_TX_BUFFER_SIZE) == HAL_OK){
-    			active_hx711->tx_in_progress = 1U;
-    			active_hx711->measurement_count = 0U;
-    		}
+				if (HAL_UART_Transmit_IT(&huart1, (uint8_t *)( active_hx711->tx_buffer), HX711_TX_BUFFER_SIZE) == HAL_OK){
+					active_hx711->tx_in_progress = 1U;
+					active_hx711->measurement_count = 0U;
+				}
+			}
     	}
-
 
 
     }

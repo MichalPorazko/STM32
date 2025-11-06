@@ -57,7 +57,7 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define DEBOUNCE_COUNT 1000000
+#define DEBOUNCE_COUNT 10000
 #define BTN_POWER_Pin GPIO_PIN_1
 #define BTN_POWER_GPIO_Port GPIOC
 #define BTN_UP_Pin GPIO_PIN_0
