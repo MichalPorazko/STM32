@@ -5,24 +5,29 @@ static void to_page1(void);
 static void to_page2(void);
 static void to_page3(void);
 
+static void start_resume_measurement_option(void);
+static void pause_measurement_option(void);
+static void end_measurement_option(void);
+
+
 
 
 volatile uint16_t pin_debounce;
 
 
 static MenuOption page1_options[] = {
-    { L"START POMIARU", to_page2 }
+    { L"START POMIARU", start_resume_measurement_option }
 };
 
 static MenuOption page2_options[] = {
-	{ L"PRZERWIJ POMIAR", to_page3 },
-	{ L"KONIEC POMIARU", to_page1 }
+	{ L"PRZERWIJ POMIAR", pause_measurement_option },
+	{ L"KONIEC POMIARU", end_measurement_option }
 
 };
 
 static MenuOption page3_options[] = {
-	{ L"WZNOW POMIAR", to_page2 },
-	{ L"KONIEC POMIARU", to_page1 }
+	{ L"WZNOW POMIAR", start_resume_measurement_option },
+	{ L"KONIEC POMIARU", end_measurement_option }
 };
 
 static MenuPage page1 = {
@@ -52,15 +57,35 @@ static void to_page1(void) {
 	current_page = &page1;
 	menu_draw(current_page->option_count, current_page->selected, current_page->options);
 }
+
 static void to_page2(void) {
 	current_page = &page2;
 	menu_draw(current_page->option_count, current_page->selected, current_page->options);
-	start_measurement();
 }
 
 static void to_page3(void) {
 	current_page = &page3;
 	menu_draw(current_page->option_count, current_page->selected, current_page->options);
+}
+
+static void start_measurement_option(void) {
+	to_page2();
+	active_hx711->start_measurement = 1U;
+}
+
+static void pause_measurement_option(void) {
+	to_page3();
+	pause_measurement();
+}
+
+static void start_resume_measurement_option(void) {
+	to_page2();
+	active_hx711->start_measurement = 1U;
+}
+
+static void end_measurement_option(void) {
+	to_page1();
+	end_measurement();
 }
 
 
@@ -109,19 +134,11 @@ void turn_off(void) {
 }
 
 
-static void button_debounce(uint16_t GPIO_Pin) {
+void button_debounce(uint16_t GPIO_Pin) {
 
         __HAL_TIM_SET_COUNTER(&htim6, 0);
         HAL_TIM_Base_Start_IT(&htim6);
         pin_debounce = GPIO_Pin;
 
 
-}
-
-void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
-{
-	if ((GPIO_Pin == BTN_UP_Pin) || (GPIO_Pin == BTN_DOWN_Pin) || (GPIO_Pin == BTN_ENTER_Pin) || (GPIO_Pin == BTN_POWER_Pin))
-	{
-		button_debounce(GPIO_Pin);
-	}
 }

@@ -103,13 +103,12 @@ int main(void)
   MX_DMA_Init();
   MX_SPI2_Init();
   MX_TIM1_Init();
-  MX_TIM2_Init();
   MX_USART1_UART_Init();
   MX_TIM6_Init();
   /* USER CODE BEGIN 2 */
 
 
-
+  HAL_TIM_Base_Start(&htim1);
   hx711_init(active_hx711, HX_DT_GPIO_Port, HX_DT_Pin);
   menu_init();
 

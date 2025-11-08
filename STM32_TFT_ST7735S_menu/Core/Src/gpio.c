@@ -1,4 +1,6 @@
 /* USER CODE BEGIN Header */
+#include "menu.h"
+#include "HX711.h"
 /**
   ******************************************************************************
   * @file    gpio.c
@@ -71,6 +73,12 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_PULLDOWN;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
+  /*Configure GPIO pin : HX_DT_Pin */
+  GPIO_InitStruct.Pin = HX_DT_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(HX_DT_GPIO_Port, &GPIO_InitStruct);
+
   /*Configure GPIO pins : LCD_CS_Pin LCD_DC_Pin */
   GPIO_InitStruct.Pin = LCD_CS_Pin|LCD_DC_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
@@ -85,11 +93,29 @@ void MX_GPIO_Init(void)
   HAL_NVIC_SetPriority(EXTI1_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(EXTI1_IRQn);
 
+  HAL_NVIC_SetPriority(EXTI3_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI3_IRQn);
+
   HAL_NVIC_SetPriority(EXTI4_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(EXTI4_IRQn);
 
 }
 
 /* USER CODE BEGIN 2 */
+
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+	if ((GPIO_Pin == BTN_UP_Pin) || (GPIO_Pin == BTN_DOWN_Pin) ||
+			(GPIO_Pin == BTN_ENTER_Pin) || (GPIO_Pin == BTN_POWER_Pin))
+	{
+		button_debounce(GPIO_Pin);
+	}
+
+	if (GPIO_Pin == HX_DT_Pin){
+		if(active_hx711->start_measurement == 1U){
+			start_measurement();
+		}
+	}
+}
 
 /* USER CODE END 2 */

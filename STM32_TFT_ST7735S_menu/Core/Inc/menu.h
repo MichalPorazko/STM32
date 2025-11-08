@@ -28,3 +28,5 @@ void menu_next(void);
 void menu_prev(void);
 void menu_select(void);
 
+void button_debounce(uint16_t GPIO_Pin);
+
