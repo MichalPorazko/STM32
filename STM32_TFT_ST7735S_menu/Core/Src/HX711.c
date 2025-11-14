@@ -131,12 +131,26 @@ void pack_data(volatile hx711_t *hx711) {
     // to keep track of the current position in the array
     size_t offset = 0U;
 
+    /*
+
+	"Stop bit and parity bits (if enabled) also contribute to the number of edges.
+
+	For example, letter 'a' with ASCII code 97 is encoded as 0100001101 on the wire
+	(with 8n1 configuration), start and stop bits included. This sequence has 3
+	positive edges (transitions from 0 to 1). Therefore, to wake up the system
+	when 'a' is sent, set wakeup_threshold=3. " -> configuration for esp32
+
+
+     */
+
+    memcpy((uint8_t *)hx711->tx_buffer + offset, "a", sizeof(char));
+    offset += sizeof(char);
+
     float processed_reading = hx711->processed_reading;
     memcpy((uint8_t *)hx711->tx_buffer + offset, &processed_reading, sizeof(float));
     offset += sizeof(float);
 
     uint8_t critical = hx711->critical;
-
     memcpy((uint8_t *)hx711->tx_buffer + offset, &critical, sizeof(uint8_t));
     offset += sizeof(uint8_t);
 

@@ -7,7 +7,7 @@
 
 #include <stdint.h>
 
-#define HX711_BUFFER_SIZE 32U
+#define HX711_BUFFER_SIZE 56U
 #define HX711_TX_BUFFER_SIZE (sizeof(float) + sizeof(uint8_t) + sizeof(uint8_t))
 
 #define measurement_threshold	   10U
@@ -31,7 +31,6 @@ typedef struct
 
 	uint8_t       measurement_count;
 	uint8_t       tx_buffer[HX711_TX_BUFFER_SIZE];
-	uint8_t       tx_length;
 	uint8_t       tx_in_progress;
 
 	uint8_t new_patient;

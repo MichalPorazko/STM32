@@ -57,7 +57,7 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define DEBOUNCE_COUNT 10000
+#define DEBOUNCE_COUNT 5000
 #define BTN_POWER_Pin GPIO_PIN_1
 #define BTN_POWER_GPIO_Port GPIOC
 #define BTN_UP_Pin GPIO_PIN_0
@@ -71,6 +71,8 @@ void Error_Handler(void);
 #define BTN_ENTER_EXTI_IRQn EXTI4_IRQn
 #define LCD_RST_Pin GPIO_PIN_7
 #define LCD_RST_GPIO_Port GPIOC
+#define HX_SCK_Pin GPIO_PIN_8
+#define HX_SCK_GPIO_Port GPIOA
 #define HX_DT_Pin GPIO_PIN_3
 #define HX_DT_GPIO_Port GPIOB
 #define HX_DT_EXTI_IRQn EXTI3_IRQn
