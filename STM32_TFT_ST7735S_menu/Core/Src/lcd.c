@@ -5,6 +5,9 @@
 #include "hagl.h"
 #include "font6x9.h"
 #include "rgb565.h"
+#include "fontx.h"
+#include "menu.h"
+
 
 #define ST7735S_SLPOUT			0x11
 #define ST7735S_DISPOFF			0x28
@@ -193,28 +196,97 @@ void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi)
 	}
 }
 
-void menu_draw(uint8_t option_count, uint8_t selected, struct MenuOption *options)
+static uint8_t font_height(const unsigned char *font)
 {
-    color_t gold = rgb565(255, 215, 0);
-    color_t red = rgb565(255, 0, 0);
-    color_t green = rgb565(0, 255, 0);
-    color_t white = rgb565(255, 255, 255);
-
-    int rect_width = 80;
-    int rect_height = 30;
-    int spacing = 10;
-    int x = (LCD_WIDTH - rect_width) / 2;
-    int y = 20;
-
-    hagl_clear_screen();
-    hagl_draw_rectangle(0, 0, LCD_WIDTH - 1, LCD_HEIGHT - 1, gold);
-
-    for (uint8_t i = 0; i < option_count; i++) {
-        color_t color = (i == selected ) ? green : red;
-        hagl_fill_rectangle(x, y, x + rect_width - 1, y + rect_height - 1, color);
-        hagl_put_text(options[i].label, x + 5, y + 10, white, font6x9);
-        y += rect_height + spacing;
+    fontx_meta_t meta;
+    if (0 != fontx_meta(&meta, font)) {
+        return 0;
     }
+
+    return meta.height;
+}
+
+static uint16_t text_width(const wchar_t *text, const unsigned char *font){
+
+	uint16_t width = 0;
+	    fontx_glyph_t glyph;
+	    while (*text != L'\0') {
+	        if (0 == fontx_glyph(&glyph, *text, font)) {
+	            width = (uint16_t)(width + glyph.width);
+	        }
+	        text++;
+	    }
+
+	    return width;
+
+}
+
+void menu_draw(const MenuPage *page)
+{
+	hagl_clear_screen();
+
+	const color_t gold = rgb565(255, 215, 0);
+	const color_t red = rgb565(255, 0, 0);
+	const color_t green = rgb565(0, 255, 0);
+	const color_t white = rgb565(255, 255, 255);
+
+	const int top_margin = 8;
+	const int option_spacing = 12;
+	const int horizontal_margin = 6;
+	const int base_horizontal_padding = 12;
+	const int vertical_padding = 4;
+
+	uint8_t line_height = font_height(font6x9);
+	if (line_height == 0U) {
+		line_height = 9U;
+	}
+	const uint16_t rect_height = (uint16_t)(line_height + (uint8_t)(vertical_padding * 2));
+
+	int y = top_margin;
+
+	if (page->type == MENU_PAGE_START || page->type == MENU_PAGE_PAUSE) {
+		wchar_t measurement_text[32];
+		float measurement_value = menu_get_measurement_value();
+
+
+//		if (measurement_value < 0.0f) {
+//			measurement_value = 0.0f;
+//		}
+//		if (measurement_value > 1000.0f) {
+//			measurement_value = 1000.0f;
+//		}
+
+
+//		uint16_t rounded_value = (uint16_t)(measurement_value + 0.5f);
+		swprintf(measurement_text, sizeof(measurement_text) / sizeof(*measurement_text), L"%u ml", (unsigned int)measurement_value);
+		uint16_t measurement_width = text_width(measurement_text, font6x9);
+		int measurement_x = (LCD_WIDTH - measurement_width) / 2;
+		hagl_put_text(measurement_text, measurement_x, y, white, font6x9);
+		y += (int)line_height + option_spacing;
+	} else {
+		y += option_spacing;
+	}
+
+	for (uint8_t i = 0; i < page->option_count; i++) {
+		const MenuOption *option = &page->options[i];
+		uint16_t label_width = text_width(option->label, font6x9);
+		uint16_t desired_width = (uint16_t)(label_width + (uint16_t)(base_horizontal_padding * 2));
+		const uint16_t max_rect_width = (uint16_t)(LCD_WIDTH - (horizontal_margin * 2));
+		uint16_t rect_width = desired_width;
+		if (rect_width > max_rect_width) {
+			rect_width = max_rect_width;
+		}
+		int rect_x = (LCD_WIDTH - rect_width) / 2;
+		int text_x = rect_x + (rect_width - (int)label_width) / 2;
+		int text_y = y + ((int)rect_height - (int)line_height) / 2;
+
+		color_t color = (i == page->selected) ? green : red;
+		hagl_fill_rectangle(rect_x, y, rect_x + rect_width - 1, y + rect_height - 1, color);
+		hagl_draw_rectangle(rect_x, y, rect_x + rect_width - 1, y + rect_height - 1, gold);
+		hagl_put_text(option->label, text_x, text_y, white, font6x9);
+
+		y += rect_height + option_spacing;
+	}
 
     lcd_copy();
 }

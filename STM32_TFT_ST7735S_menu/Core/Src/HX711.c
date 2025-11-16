@@ -7,6 +7,8 @@
 #include <string.h>
 #include "menu.h"
 #include "stm32l4xx_ll_exti.h"
+#include "sleep.h"
+
 
 volatile hx711_t *active_hx711 = NULL;
 static volatile uint8_t tim2_needs_rearm = 0U;
@@ -23,7 +25,6 @@ void reset_parameters(volatile hx711_t *hx711){
 	hx711->measurement_count = 0U;
 	memset((void*)hx711->bit_buffer, 0, HX711_BUFFER_SIZE);
 	hx711->raw_reading = 0;
-	hx711->processed_reading = 0;
 	hx711->start_measurement = 0U;
 
 }
@@ -44,19 +45,20 @@ void hx711_init(volatile hx711_t *hx711, GPIO_TypeDef *data_gpio, uint16_t data_
 }
 
 
+
 void start_measurement(void){
 
-	 HAL_TIM_PWM_Start_IT(&htim1, TIM_CHANNEL_1);
+	 HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
 	 LL_EXTI_DisableIT_0_31(LL_EXTI_LINE_12);
-
 
 }
 
 void pause_measurement(void){
 
-	HAL_TIM_PWM_Stop_IT(&htim1, TIM_CHANNEL_1);
+	HAL_TIM_PWM_Stop(&htim1, TIM_CHANNEL_1);
 	reset_parameters(active_hx711);
 	LL_EXTI_EnableIT_0_31(LL_EXTI_LINE_12);
+	disable_wakeup();
 
 }
 
@@ -64,6 +66,7 @@ void end_measurement(void){
 
 	pause_measurement();
 	active_hx711->new_patient = 1U;
+	active_hx711->processed_reading = 0;
 }
 
 
@@ -90,7 +93,9 @@ void hx711_update_reading(volatile hx711_t *hx711)
 
 
   double adjusted = (double)raw_value - (double)hx711->offset;
-  hx711->processed_reading = (float)((hx711->processed_reading + (adjusted / (double)hx711->scale))/hx711->measurement_count);
+  //hx711->processed_reading = (float)((hx711->processed_reading + (adjusted / (double)hx711->scale))/hx711->measurement_count);
+  hx711->processed_reading = (float)(hx711->processed_reading + 1);
+
 }
 
 
@@ -186,11 +191,13 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
     		if (active_hx711->measurement_count <= measurement_threshold){
 
     			pack_data(active_hx711);
-        		LL_EXTI_EnableIT_0_31(LL_EXTI_LINE_12);
-    			if (HAL_UART_Transmit_IT(&huart1, (uint8_t *)( active_hx711->tx_buffer), HX711_TX_BUFFER_SIZE) == HAL_OK){
+    			if (HAL_UART_Transmit_DMA(&huart1, (uint8_t *)( active_hx711->tx_buffer), HX711_TX_BUFFER_SIZE) == HAL_OK){
 					active_hx711->measurement_count = 0U;
 				}
+    			menu_refresh();
+    			sleep();
 
+//
     		} else{
 
     			active_hx711->measurement_count = (uint8_t)(active_hx711->measurement_count + 1U);
@@ -235,4 +242,11 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
       active_hx711->tx_in_progress = 0U;
 
   }
+}
+
+void HAL_RTCEx_WakeUpTimerEventCallback(RTC_HandleTypeDef *hrtc)
+{
+	HAL_ResumeTick();
+	start_measurement();
+
 }
