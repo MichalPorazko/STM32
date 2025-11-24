@@ -55,6 +55,7 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
+static hx711_t hx711_instance;
 
 /* USER CODE END PV */
 
@@ -66,6 +67,16 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+
+int __io_putchar(int ch)
+{
+    if (ch == '\n') {
+        uint8_t ch2 = '\r';
+        HAL_UART_Transmit(&huart2, &ch2, 1, HAL_MAX_DELAY);
+    }
+    HAL_UART_Transmit(&huart2, (uint8_t*)&ch, 1, HAL_MAX_DELAY);
+    return 1;
+}
 
 
 /* USER CODE END 0 */
@@ -107,11 +118,11 @@ int main(void)
   MX_USART1_UART_Init();
   MX_TIM6_Init();
   MX_RTC_Init();
+  MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
 
 
-  HAL_TIM_Base_Start(&htim1);
-  hx711_init(active_hx711, HX_DT_GPIO_Port, HX_DT_Pin);
+  hx711_init(&hx711_instance, HX_DT_GPIO_Port, HX_DT_Pin, HX_SCK_GPIO_Port, HX_SCK_Pin);
   menu_init();
 
 
@@ -125,6 +136,7 @@ int main(void)
 
   while (1)
   {
+
 
     /* USER CODE END WHILE */
 

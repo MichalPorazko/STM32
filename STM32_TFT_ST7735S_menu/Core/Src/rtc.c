@@ -1,4 +1,5 @@
 /* USER CODE BEGIN Header */
+#include "HX711.h"
 /**
   ******************************************************************************
   * @file    rtc.c
@@ -21,6 +22,8 @@
 #include "rtc.h"
 
 /* USER CODE BEGIN 0 */
+
+uint8_t counter = 0;
 
 /* USER CODE END 0 */
 
@@ -110,4 +113,28 @@ void HAL_RTC_MspDeInit(RTC_HandleTypeDef* rtcHandle)
 
 /* USER CODE BEGIN 1 */
 
+void HAL_RTCEx_WakeUpTimerEventCallback(RTC_HandleTypeDef *hrtc)
+{
+	HAL_ResumeTick();
+	counter++;
+	start_measurement(active_hx711);
+}
+
+
+void sleep(void){
+
+
+	HAL_RTCEx_SetWakeUpTimer_IT(&hrtc, 4096, RTC_WAKEUPCLOCK_RTCCLK_DIV16);
+	HAL_SuspendTick();
+	counter++;
+	//HAL_PWR_EnterSLEEPMode(PWR_MAINREGULATOR_ON, PWR_SLEEPENTRY_WFI);
+	//HAL_PWR_EnterSTOPMode(PWR_MAINREGULATOR_ON, PWR_STOPENTRY_WFI);
+
+}
+
+void disable_wakeup(void) {
+    HAL_RTCEx_DeactivateWakeUpTimer(&hrtc);
+    counter++;
+    HAL_ResumeTick();
+}
 /* USER CODE END 1 */

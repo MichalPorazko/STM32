@@ -7,11 +7,10 @@
 
 #include <stdint.h>
 
-#define HX711_BUFFER_SIZE 56U
-#define HX711_TX_BUFFER_SIZE (sizeof(float) + sizeof(uint8_t) + sizeof(uint8_t))
+#define HX711_TX_BUFFER_SIZE 56U
 
 #define measurement_threshold	   10U
-#define SCLK_pulses					25U
+#define SCLK_pulses					27U
 
 
 typedef struct
@@ -20,7 +19,6 @@ typedef struct
 	uint8_t		start_measurement;
 	long       	offset;
 	float         scale;
-	uint8_t       bit_buffer[HX711_BUFFER_SIZE];
 	volatile uint8_t write_index;
 
 	uint8_t       buffer_length;
@@ -28,6 +26,9 @@ typedef struct
 	uint8_t 		data_to_send;
 	GPIO_TypeDef  *data_gpio;
 	uint16_t      data_pin;
+
+	GPIO_TypeDef  *clk_gpio;
+	uint16_t      clk_pin;
 
 	uint8_t       measurement_count;
 	uint8_t       tx_buffer[HX711_TX_BUFFER_SIZE];
@@ -37,22 +38,23 @@ typedef struct
 	uint8_t critical;
 
 	uint8_t sclk_pulses;
+	uint8_t gain;
 
 	long          raw_reading;
 	float         processed_reading;
+	float sum;
+
 
 
 } hx711_t;
 
-void hx711_init(volatile hx711_t* hx711, GPIO_TypeDef* data_gpio, uint16_t data_pin);
+void hx711_init( hx711_t *hx711, GPIO_TypeDef *data_gpio, uint16_t data_pin,
+		GPIO_TypeDef *clk_gpio, uint16_t clk_pin);
+void start_measurement(hx711_t *hx711);
+void pause_measurement(hx711_t *hx711);
+void end_measurement(hx711_t *hx711);
 
-void start_measurement(void);
-void pause_measurement(void);
-void end_measurement(void);
 
-void hx711_timer1_PWM_low_callback(volatile hx711_t* hx711);
-void hx711_update_reading(volatile hx711_t *hx711);
+void pack_data(hx711_t* hx711);
 
-void pack_data(volatile hx711_t* hx711);
-
-extern volatile hx711_t* active_hx711;
+extern  hx711_t* active_hx711;

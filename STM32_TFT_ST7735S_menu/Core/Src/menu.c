@@ -16,6 +16,7 @@ static void end_measurement_option(void);
 
 volatile uint16_t pin_debounce;
 
+static uint8_t number = 0;
 
 
 static MenuOption menu_page_options[] = {
@@ -82,19 +83,19 @@ static void to_pause_page(void) {
 
 
 static void pause_measurement_option(void) {
-	pause_measurement();
+	pause_measurement(active_hx711);
 	to_pause_page();
 }
 
 static void start_resume_measurement_option(void) {
 	to_start_page();
-	active_hx711->start_measurement = 1U;
+	start_measurement(active_hx711);
 
 }
 
 static void end_measurement_option(void) {
 	to_menu_page();
-	end_measurement();
+	end_measurement(active_hx711);
 }
 
 
@@ -151,7 +152,10 @@ void menu_refresh(void){
 
 float menu_get_measurement_value(void)
 {
+//	number++;
+//	return number;
 	return active_hx711->processed_reading;
+
 }
 
 

@@ -37,6 +37,9 @@
 #define CMD(x)			((x) | 0x100)
 
 
+uint16_t frame_buffer[LCD_WIDTH * LCD_HEIGHT];
+
+
 static const uint16_t init_table[] = {
   CMD(ST7735S_FRMCTR1), 0x01, 0x2c, 0x2d,
   CMD(ST7735S_FRMCTR2), 0x01, 0x2c, 0x2d,
@@ -169,7 +172,8 @@ void lcd_copy(void)
 	HAL_GPIO_WritePin(LCD_DC_GPIO_Port, LCD_DC_Pin, GPIO_PIN_SET);
 	HAL_GPIO_WritePin(LCD_CS_GPIO_Port, LCD_CS_Pin, GPIO_PIN_RESET);
 
-	HAL_SPI_Transmit_DMA(&hspi2, (uint8_t*)frame_buffer, sizeof(frame_buffer));
+	//HAL_SPI_Transmit_DMA(&hspi2, (uint8_t*)frame_buffer, sizeof(frame_buffer));
+	HAL_SPI_Transmit(&hspi2, (uint8_t*)frame_buffer, sizeof(frame_buffer), HAL_MAX_DELAY);
 	lcd_wait_for_transfer();
 
 }
@@ -182,7 +186,7 @@ void lcd_transfer_done(void)
 
 bool lcd_is_busy(void)
 {
-	if (HAL_SPI_GetState(&hspi2) == HAL_SPI_STATE_BUSY)
+	if (HAL_SPI_GetState(&hspi2) != HAL_SPI_STATE_READY )
 		return true;
 	else
 		return false;
@@ -243,6 +247,16 @@ void menu_draw(const MenuPage *page)
 	const uint16_t rect_height = (uint16_t)(line_height + (uint8_t)(vertical_padding * 2));
 
 	int y = top_margin;
+//	if (page->type == MENU_PAGE_START || page->type == MENU_PAGE_PAUSE) {
+//	    float measurement_value = menu_get_measurement_value();
+//	    if (measurement_value >= 1.0f) {
+//	        hagl_fill_rectangle(0, 0, LCD_WIDTH - 1, LCD_HEIGHT - 1, GREEN);
+//	    } else {
+//	        hagl_fill_rectangle(0, 0, LCD_WIDTH - 1, LCD_HEIGHT - 1, RED);
+//	    }
+//	    lcd_copy();
+//	    return;
+//	}
 
 	if (page->type == MENU_PAGE_START || page->type == MENU_PAGE_PAUSE) {
 		wchar_t measurement_text[32];
@@ -259,6 +273,9 @@ void menu_draw(const MenuPage *page)
 
 //		uint16_t rounded_value = (uint16_t)(measurement_value + 0.5f);
 		swprintf(measurement_text, sizeof(measurement_text) / sizeof(*measurement_text), L"%u ml", (unsigned int)measurement_value);
+		printf("DEBUG: page_type=%d, measurement_value=%.2f, text=%ls\r\n",
+		       (int)page->type, measurement_value, measurement_text);
+
 		uint16_t measurement_width = text_width(measurement_text, font6x9);
 		int measurement_x = (LCD_WIDTH - measurement_width) / 2;
 		hagl_put_text(measurement_text, measurement_x, y, white, font6x9);

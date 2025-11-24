@@ -75,7 +75,6 @@ void Error_Handler(void);
 #define HX_SCK_GPIO_Port GPIOA
 #define HX_DT_Pin GPIO_PIN_3
 #define HX_DT_GPIO_Port GPIOB
-#define HX_DT_EXTI_IRQn EXTI3_IRQn
 #define LCD_CS_Pin GPIO_PIN_4
 #define LCD_CS_GPIO_Port GPIOB
 #define LCD_DC_Pin GPIO_PIN_5

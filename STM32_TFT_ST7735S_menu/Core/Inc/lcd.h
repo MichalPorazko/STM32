@@ -21,7 +21,7 @@
 #define WHITE     0xffff
 
 typedef struct MenuPage MenuPage;
-uint16_t frame_buffer[LCD_WIDTH * LCD_HEIGHT];
+extern uint16_t frame_buffer[LCD_WIDTH * LCD_HEIGHT];
 
 void lcd_init(void);
 void lcd_fill_box(int x, int y, int width, int height, uint16_t color);

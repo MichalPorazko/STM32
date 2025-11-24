@@ -58,11 +58,10 @@ void SysTick_Handler(void);
 void RTC_WKUP_IRQHandler(void);
 void EXTI0_IRQHandler(void);
 void EXTI1_IRQHandler(void);
-void EXTI3_IRQHandler(void);
 void EXTI4_IRQHandler(void);
 void DMA1_Channel4_IRQHandler(void);
 void DMA1_Channel5_IRQHandler(void);
-void USART1_IRQHandler(void);
+void DMA1_Channel7_IRQHandler(void);
 void TIM6_DAC_IRQHandler(void);
 /* USER CODE BEGIN EFP */
 
