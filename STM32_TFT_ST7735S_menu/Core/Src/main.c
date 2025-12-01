@@ -136,7 +136,17 @@ int main(void)
 
   while (1)
   {
+	  if(interrupt_pending){
+		  printf("pending is on");
+	  }
 
+	  if (rtc_wakeup_flag) {
+		  rtc_wakeup_flag = 0;
+
+		  // Do one measurement + update display + send UART
+		  start_measurement(active_hx711);
+
+	  }
 
     /* USER CODE END WHILE */
 

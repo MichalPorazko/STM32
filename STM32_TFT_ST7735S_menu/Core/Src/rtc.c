@@ -1,5 +1,7 @@
 /* USER CODE BEGIN Header */
 #include "HX711.h"
+#include <inttypes.h>
+#include <stdio.h>
 /**
   ******************************************************************************
   * @file    rtc.c
@@ -24,6 +26,23 @@
 /* USER CODE BEGIN 0 */
 
 uint8_t counter = 0;
+static uint8_t interrupt_pending = 0;
+volatile uint8_t rtc_wakeup_flag = 0;
+
+
+int _write(int file, char *ptr, int len){
+
+	/* Implement your write code here, this is used by puts and printf for example */
+
+	int i=0;
+
+	for(i=0 ; i<len ; i++)
+
+	ITM_SendChar((*ptr++));
+
+	return len;
+
+}
 
 /* USER CODE END 0 */
 
@@ -115,26 +134,48 @@ void HAL_RTC_MspDeInit(RTC_HandleTypeDef* rtcHandle)
 
 void HAL_RTCEx_WakeUpTimerEventCallback(RTC_HandleTypeDef *hrtc)
 {
-	HAL_ResumeTick();
+	//HAL_ResumeTick();
+	printf("Inside the HAL_RTCEx_WakeUpTimerEventCallback function");
 	counter++;
-	start_measurement(active_hx711);
+	rtc_wakeup_flag = 1;
+//	start_measurement(active_hx711);
+	HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
 }
 
 
 void sleep(void){
 
+	HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
 
-	HAL_RTCEx_SetWakeUpTimer_IT(&hrtc, 4096, RTC_WAKEUPCLOCK_RTCCLK_DIV16);
-	HAL_SuspendTick();
+
+	if (HAL_RTCEx_SetWakeUpTimer_IT(&hrtc, 4096, RTC_WAKEUPCLOCK_RTCCLK_DIV16) != HAL_OK) {
+		Error_Handler();
+	}
+	printf("the HAL_RTCEx_SetWakeUpTimer_IT has been called \n");
+
+	uint32_t pending = HAL_NVIC_GetPendingIRQ(RTC_WKUP_IRQn);
+
+	printf("the pending bit for the RTC clock interrupt %lu\n", pending);
+	//printf("Value: %lu\n", pending);  // If uint32_t is equivalent to unsigned long
+
+	//HAL_SuspendTick();
 	counter++;
-	//HAL_PWR_EnterSLEEPMode(PWR_MAINREGULATOR_ON, PWR_SLEEPENTRY_WFI);
-	//HAL_PWR_EnterSTOPMode(PWR_MAINREGULATOR_ON, PWR_STOPENTRY_WFI);
+
+	//DBGMCU->CR = 0;
+
+	//if (pending == 1){
+	//		interrupt_pending = 1;
+	printf("Entering the sleep mode...");
+			HAL_PWR_EnterSLEEPMode(PWR_MAINREGULATOR_ON, PWR_SLEEPENTRY_WFI);
+	//	}
+
 
 }
 
 void disable_wakeup(void) {
     HAL_RTCEx_DeactivateWakeUpTimer(&hrtc);
     counter++;
-    HAL_ResumeTick();
+    //HAL_ResumeTick();
+    rtc_wakeup_flag = 0;
 }
 /* USER CODE END 1 */

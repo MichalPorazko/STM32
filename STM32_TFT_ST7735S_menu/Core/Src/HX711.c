@@ -25,7 +25,7 @@ void reset_parameters( hx711_t *hx711){
 	hx711->start_measurement = 0U;
 
 	hx711->sum = 0.0f;
-	hx711->processed_reading = 0.0f;
+
 
 }
 
@@ -45,6 +45,8 @@ void hx711_init( hx711_t *hx711, GPIO_TypeDef *data_gpio, uint16_t data_pin, GPI
   hx711->new_patient = 1U;
   hx711->offset = -39878.57;
   hx711->gain = 3;
+
+  hx711->processed_reading = 0.0f;
 
   active_hx711 = hx711;
 }

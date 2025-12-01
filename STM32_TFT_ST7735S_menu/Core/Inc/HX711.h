@@ -23,7 +23,6 @@ typedef struct
 
 	uint8_t       buffer_length;
 	uint8_t       read_index;
-	uint8_t 		data_to_send;
 	GPIO_TypeDef  *data_gpio;
 	uint16_t      data_pin;
 
@@ -43,8 +42,6 @@ typedef struct
 	long          raw_reading;
 	float         processed_reading;
 	float sum;
-
-
 
 } hx711_t;
 

@@ -35,7 +35,8 @@ extern "C" {
 extern RTC_HandleTypeDef hrtc;
 
 /* USER CODE BEGIN Private defines */
-
+volatile uint8_t rtc_wakeup_flag;
+static uint8_t interrupt_pending;
 /* USER CODE END Private defines */
 
 void MX_RTC_Init(void);
