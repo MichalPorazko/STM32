@@ -58,11 +58,10 @@ void Error_Handler(void);
 
 /* Private defines -----------------------------------------------------------*/
 #define DEBOUNCE_COUNT 5000
+#define BTN_UP_Pin GPIO_PIN_13
+#define BTN_UP_GPIO_Port GPIOC
 #define BTN_POWER_Pin GPIO_PIN_1
 #define BTN_POWER_GPIO_Port GPIOC
-#define BTN_UP_Pin GPIO_PIN_0
-#define BTN_UP_GPIO_Port GPIOA
-#define BTN_UP_EXTI_IRQn EXTI0_IRQn
 #define BTN_DOWN_Pin GPIO_PIN_1
 #define BTN_DOWN_GPIO_Port GPIOA
 #define BTN_ENTER_Pin GPIO_PIN_4
