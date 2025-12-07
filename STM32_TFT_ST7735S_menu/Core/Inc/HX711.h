@@ -8,9 +8,8 @@
 #include <stdint.h>
 
 #define HX711_TX_BUFFER_SIZE 56U
-
+#define HX711_BUFFER_SIZE 32U
 #define measurement_threshold	   10U
-#define SCLK_pulses					27U
 
 
 typedef struct
@@ -19,9 +18,10 @@ typedef struct
 	uint8_t		start_measurement;
 	long       	offset;
 	float         scale;
+	uint8_t       bit_buffer[HX711_BUFFER_SIZE];
 	volatile uint8_t write_index;
 
-	uint8_t       buffer_length;
+	uint8_t sclk_pulses;
 	uint8_t       read_index;
 	GPIO_TypeDef  *data_gpio;
 	uint16_t      data_pin;
@@ -36,8 +36,6 @@ typedef struct
 	uint8_t new_patient;
 	uint8_t critical;
 
-	uint8_t sclk_pulses;
-	uint8_t gain;
 
 	long          raw_reading;
 	float         processed_reading;
@@ -48,6 +46,8 @@ typedef struct
 void hx711_init( hx711_t *hx711, GPIO_TypeDef *data_gpio, uint16_t data_pin,
 		GPIO_TypeDef *clk_gpio, uint16_t clk_pin);
 void start_measurement(hx711_t *hx711);
+void hx711_timer1_PWM_low_callback(hx711_t* hx711);
+void hx711_update_reading(hx711_t *hx711);
 void pause_measurement(hx711_t *hx711);
 void end_measurement(hx711_t *hx711);
 

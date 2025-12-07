@@ -273,8 +273,7 @@ void menu_draw(const MenuPage *page)
 
 //		uint16_t rounded_value = (uint16_t)(measurement_value + 0.5f);
 		swprintf(measurement_text, sizeof(measurement_text) / sizeof(*measurement_text), L"%u ml", (unsigned int)measurement_value);
-		printf("DEBUG: page_type=%d, measurement_value=%.2f, text=%ls\r\n",
-		       (int)page->type, measurement_value, measurement_text);
+
 
 		uint16_t measurement_width = text_width(measurement_text, font6x9);
 		int measurement_x = (LCD_WIDTH - measurement_width) / 2;

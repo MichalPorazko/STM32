@@ -11,13 +11,12 @@
 
 
 hx711_t *active_hx711 = NULL;
-uint8_t bla  = 0;
+static volatile uint8_t tim2_needs_rearm = 0U;
 
-
+static long transform_reading( hx711_t *hx711);
 
 void reset_parameters( hx711_t *hx711){
 
-	hx711->sclk_pulses = 0U;
 	hx711->critical = 0U;
 	hx711->write_index = 0U;
 	hx711->measurement_count = 0U;
@@ -38,13 +37,14 @@ void hx711_init( hx711_t *hx711, GPIO_TypeDef *data_gpio, uint16_t data_pin, GPI
   hx711->data_gpio = data_gpio;
   hx711->data_pin = data_pin;
 
+  hx711->sclk_pulses = htim1.Init.RepetitionCounter + 1U;
+
   hx711->clk_gpio = clk_gpio;
   hx711->clk_pin = clk_pin;
 
   hx711->scale = -1.017;
   hx711->new_patient = 1U;
   hx711->offset = -39878.57;
-  hx711->gain = 3;
 
   hx711->processed_reading = 0.0f;
 
@@ -52,101 +52,71 @@ void hx711_init( hx711_t *hx711, GPIO_TypeDef *data_gpio, uint16_t data_pin, GPI
 }
 
 
-static uint8_t shiftIn(hx711_t *hx711) {
-    uint8_t value = 0;
-    uint8_t i;
+void start_measurement(hx711_t *hx711){
 
-    for(i = 0; i < 8; ++i) {
-    	HAL_GPIO_WritePin(HX_SCK_GPIO_Port, HX_SCK_Pin, GPIO_PIN_SET);
-        value |= HAL_GPIO_ReadPin(HX_DT_GPIO_Port, HX_DT_Pin) << (7 - i);
-        HAL_GPIO_WritePin(HX_SCK_GPIO_Port, HX_SCK_Pin, GPIO_PIN_RESET);
-    }
-    return value;
+	if (HAL_TIM_OnePulse_Start_IT(&htim1, TIM_CHANNEL_1) != HAL_OK)
+	    {
+	      Error_Handler();
+	    }
+
 }
 
-static bool is_ready(hx711_t *hx711) {
-	if(HAL_GPIO_ReadPin(HX_DT_GPIO_Port, HX_DT_Pin) == GPIO_PIN_RESET){
-		return 1;
-	}
-	return 0;
+void hx711_timer1_PWM_low_callback( hx711_t *hx711){
+
+  uint8_t index = hx711->write_index;
+  if (index < hx711->sclk_pulses)
+  {
+	  hx711->bit_buffer[index] = (HAL_GPIO_ReadPin(hx711->data_gpio, hx711->data_pin) ? 1U : 0U);
+    index++;
+    hx711->write_index = index;
+  }
+  else
+  {
+	  hx711->write_index = 0U;
+  }
+
+}
+
+void hx711_update_reading( hx711_t *hx711)
+{
+  long raw_value = transform_reading(hx711);
+  hx711->raw_reading = raw_value;
+
+
+  double adjusted = (double)raw_value - (double)hx711->offset;
+  hx711->processed_reading = (float)((hx711->processed_reading + (adjusted / (double)hx711->scale))/hx711->measurement_count);
 }
 
 
-static void wait_ready(hx711_t *hx711) {
-	// Wait for the chip to become ready.
-	while (!is_ready(hx711)) {
-	}
-}
-
-static long read(hx711_t *hx711){
-
-	wait_ready(hx711);
+static long transform_reading( hx711_t *hx711){
 
 	unsigned long value = 0;
-	uint8_t data[3] = { 0 };
 	uint8_t filler = 0x00;
+	uint8_t data[3] = {0};
 
-	//noInterrupts();
-
-	data[2] = shiftIn(hx711);
-	data[1] = shiftIn(hx711);
-	data[0] = shiftIn(hx711);
-
-	for (unsigned int i = 0; i < hx711->gain; i++) {
-		HAL_GPIO_WritePin(HX_SCK_GPIO_Port, HX_SCK_Pin, GPIO_PIN_SET);
-		HAL_GPIO_WritePin(HX_SCK_GPIO_Port, HX_SCK_Pin, GPIO_PIN_RESET);
+	for (uint8_t i = 0; i < 8; ++i) {
+	        data[0] |= (hx711->bit_buffer[i] & 0x01U) << (7-i);
+	        data[1] |= (hx711->bit_buffer[8+i] & 0x01U) << (7-i);
+	        data[2] |= (hx711->bit_buffer[16+i] & 0x01U) << (7-i);
 	}
 
-	//interrupts();
 
-	// Replicate the most significant bit to pad out a 32-bit signed integer
+	//binary 0x80 10000000
 	if (data[2] & 0x80) {
+		//11111111
 		filler = 0xFF;
 	} else {
+		//00000000
 		filler = 0x00;
 	}
 
 	// Construct a 32-bit signed integer
 	value = ( (unsigned long)(filler) << 24
-				| (unsigned long)(data[2]) << 16
-				| (unsigned long)(data[1]) << 8
-				| (unsigned long)(data[0]) );
+			| (unsigned long)(data[0]) << 16
+			| (unsigned long)(data[1]) << 8
+			| (unsigned long)(data[2]) );
 
-		return (long)(value);
-}
-
-static long read_average(hx711_t *hx711, int8_t times) {
-
-	long  sum = 0.0f;
-
-	for (int8_t i = 0; i < times; i++) {
-		sum += read(hx711);
-	}
-	return sum / times;
-}
-
-
-static double get_value(hx711_t *hx711, int8_t times) {
-
-	long offset = hx711->offset;
-	long avg = read_average(hx711, times);
-	return avg - offset;
-
-}
-
-
-void tare(hx711_t *hx711, uint8_t times) {
-	float sum = read_average(hx711, times);
-	hx711->offset = sum;
-}
-
-
-void tare_all(hx711_t *hx711, uint8_t times) {
-	tare(hx711, times);
-}
-
-static float get_weight(hx711_t *hx711, int8_t times) {
-	return get_value(hx711, times) / hx711->scale;
+	return (long)(value);
 }
 
 void pack_data( hx711_t *hx711) {
@@ -184,22 +154,53 @@ void pack_data( hx711_t *hx711) {
 
 }
 
-void start_measurement(hx711_t *hx711){
+void HAL_TIM_PWM_PulseFinishedCallback (TIM_HandleTypeDef * htim){
 
-	//hx711->processed_reading = get_weight(active_hx711, 10);
-	bla++;
-	hx711->processed_reading = bla;
-	menu_refresh();
-	pack_data(hx711);
-	if (HAL_UART_Transmit_DMA(&huart2, (uint8_t *)( active_hx711->tx_buffer), HX711_TX_BUFFER_SIZE) == HAL_OK){
-						active_hx711->measurement_count = 0U;
-						active_hx711->tx_in_progress = 1U;
+	hx711_update_reading(active_hx711);
+	active_hx711->measurement_count = (uint8_t)(active_hx711->measurement_count + 1U);
+}
+
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+	if (htim->Instance == TIM1) {
+
+		pack_data(active_hx711);
+
+		if (HAL_UART_Transmit_IT(&huart2, (uint8_t *)( active_hx711->tx_buffer), HX711_TX_BUFFER_SIZE) == HAL_OK){
+			active_hx711->tx_in_progress = 1U;
+			active_hx711->measurement_count = 0U;
+		}
 	}
 
-	sleep();
 
+    if (htim->Instance == TIM6) {
+		HAL_TIM_Base_Stop_IT(&htim6);
+		__HAL_TIM_SET_COUNTER(&htim6, 0);
 
+		if (pin_debounce == BTN_UP_Pin)
+			{
+				menu_next();
+				pin_debounce = 0;
+			}
+		if (pin_debounce == BTN_DOWN_Pin)
+			{
+				menu_prev();
+				pin_debounce = 0;
+			}
+		if (pin_debounce == BTN_ENTER_Pin)
+			{
+				menu_select();
+				pin_debounce = 0;
+			}
+		if (pin_debounce == BTN_POWER_Pin)
+			{
+				turn_off();
+				pin_debounce = 0;
+			}
+
+    }
 }
+
 
 void pause_measurement(hx711_t *hx711){
 

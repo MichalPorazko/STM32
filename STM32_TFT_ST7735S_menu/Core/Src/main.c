@@ -115,7 +115,6 @@ int main(void)
   MX_DMA_Init();
   MX_SPI2_Init();
   MX_TIM1_Init();
-  MX_USART1_UART_Init();
   MX_TIM6_Init();
   MX_RTC_Init();
   MX_USART2_UART_Init();
@@ -124,7 +123,7 @@ int main(void)
 
   hx711_init(&hx711_instance, HX_DT_GPIO_Port, HX_DT_Pin, HX_SCK_GPIO_Port, HX_SCK_Pin);
   menu_init();
-
+  HAL_TIM_Base_Start(&htim1);
 
 
 
@@ -136,9 +135,6 @@ int main(void)
 
   while (1)
   {
-	  if(interrupt_pending){
-		  printf("pending is on");
-	  }
 
 	  if (rtc_wakeup_flag) {
 		  rtc_wakeup_flag = 0;
