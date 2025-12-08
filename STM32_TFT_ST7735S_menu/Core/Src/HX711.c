@@ -11,7 +11,6 @@
 
 
 hx711_t *active_hx711 = NULL;
-uint8_t bla  = 0;
 
 
 
@@ -41,9 +40,9 @@ void hx711_init( hx711_t *hx711, GPIO_TypeDef *data_gpio, uint16_t data_pin, GPI
   hx711->clk_gpio = clk_gpio;
   hx711->clk_pin = clk_pin;
 
-  hx711->scale = -1.017;
+  hx711->scale = -23.45f;
   hx711->new_patient = 1U;
-  hx711->offset = -39878.57;
+  hx711->offset = -40620.91f;
   hx711->gain = 3;
 
   hx711->processed_reading = 0.0f;
@@ -186,9 +185,7 @@ void pack_data( hx711_t *hx711) {
 
 void start_measurement(hx711_t *hx711){
 
-	//hx711->processed_reading = get_weight(active_hx711, 10);
-	bla++;
-	hx711->processed_reading = bla;
+	hx711->processed_reading = get_weight(active_hx711, 10);
 	menu_refresh();
 	pack_data(hx711);
 	if (HAL_UART_Transmit_DMA(&huart2, (uint8_t *)( active_hx711->tx_buffer), HX711_TX_BUFFER_SIZE) == HAL_OK){
