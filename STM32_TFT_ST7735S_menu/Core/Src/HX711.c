@@ -41,8 +41,12 @@ void hx711_init( hx711_t *hx711, GPIO_TypeDef *data_gpio, uint16_t data_pin, GPI
   hx711->clk_pin = clk_pin;
 
   hx711->scale = -23.45f;
-  hx711->new_patient = 1U;
-  hx711->offset = -40620.91f;
+    hx711->new_patient = 1U;
+    hx711->offset = -40620.91f;
+
+//  hx711->scale = 1.1f;
+//  hx711->new_patient = 1U;
+//  hx711->offset = 0.0f;
   hx711->gain = 3;
 
   hx711->processed_reading = 0.0f;

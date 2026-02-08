@@ -60,10 +60,12 @@ void Error_Handler(void);
 #define DEBOUNCE_COUNT 5000
 #define BTN_UP_Pin GPIO_PIN_13
 #define BTN_UP_GPIO_Port GPIOC
+#define BTN_UP_EXTI_IRQn EXTI15_10_IRQn
 #define BTN_POWER_Pin GPIO_PIN_1
 #define BTN_POWER_GPIO_Port GPIOC
 #define BTN_DOWN_Pin GPIO_PIN_1
 #define BTN_DOWN_GPIO_Port GPIOA
+#define BTN_DOWN_EXTI_IRQn EXTI1_IRQn
 #define BTN_ENTER_Pin GPIO_PIN_4
 #define BTN_ENTER_GPIO_Port GPIOA
 #define BTN_ENTER_EXTI_IRQn EXTI4_IRQn

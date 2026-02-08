@@ -254,10 +254,11 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef* uartHandle)
 
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
 {
-  if (huart->Instance == USART1)
+  if (huart->Instance == USART2)
   {
 
       active_hx711->tx_in_progress = 0U;
+
 
   }
 }
